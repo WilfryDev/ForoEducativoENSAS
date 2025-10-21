@@ -130,7 +130,7 @@ header {
 }
 
 .theme-toggle-btn {
-  background: var(--bg-color); /* Usa el fondo del body (puede ser degradado) */
+  background: var(--bg-color); /* Usa el fondo del body */
   border: 1px solid var(--border-color-light); /* Borde sutil */
   border-radius: 50%;
   width: 45px;
@@ -209,8 +209,7 @@ header > .container > p {
 }
 
 .btn-google:hover {
-    /* Fondo ligeramente más claro/oscuro que la tarjeta */
-    background-color: var(--bg-color);
+    background-color: var(--bg-color); /* Fondo del body */
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 /* Asegura que el botón use color sólido en modo claro */
@@ -350,7 +349,7 @@ section {
   font-size: 1rem;
   resize: vertical;
   transition: var(--transition);
-  background: var(--input-bg); /* <-- CORREGIDO */
+  background-color: var(--input-bg); /* <-- CORREGIDO */
   color: var(--text-color);
 }
 
@@ -365,7 +364,7 @@ section {
 }
 
 .opinion-item {
-  background: var(--bg-card); /* <-- CORREGIDO */
+  background-color: var(--bg-card); /* <-- CORREGIDO */
   padding: 1.5rem;
   border-radius: var(--border-radius);
   margin-bottom: 1rem;
@@ -570,7 +569,7 @@ html:not([data-theme="dark"]) .body-404 {
   border-radius: 8px;
   font-size: 0.95rem;
   resize: vertical;
-  background: var(--input-bg); /* <-- CORREGIDO */
+  background-color: var(--input-bg); /* <-- CORREGIDO */
   color: var(--text-color);
   font-family: inherit;
   transition: var(--transition);
@@ -624,7 +623,7 @@ html:not([data-theme="dark"]) .body-404 {
 }
 
 .reply-item {
-  background-color: var(--bg-card);
+  background-color: var(--bg-card); /* <-- CORREGIDO */
   border: 1px solid var(--border-color-light);
   padding: 1rem;
   border-radius: var(--border-radius);
@@ -733,6 +732,7 @@ html:not([data-theme="dark"]) .body-404 {
 #profile-form .btn-primary {
     width: 100%; /* Ocupa todo el ancho */
 }
+
 
 /* ===== RESPONSIVIDAD ===== */
 @media (max-width: 768px) {

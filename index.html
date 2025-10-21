@@ -32,7 +32,7 @@
             <div id="welcome-section" class="welcome-section hidden">
                 <h3>Bienvenido, <span id="display-username"></span></h3>
                 <div class="user-actions">
-                    <button id="edit-profile-btn" class="btn-secondary">Editar Perfil</button>
+                    <a href="perfil.html" id="edit-profile-link" class="btn-secondary">Editar Perfil</a>
                     <button id="logout-btn" class="btn-secondary">Cerrar Sesión</button>
                 </div>
                 <h3></h3> <h3>El debate genera opiniones y estima el desarrollo de habilidades comunicativas.</h3>
@@ -95,18 +95,6 @@
             <h3>WillfryDev - LuisDev</h3>
         </div>
     </footer>
-
-    <div id="profile-modal" class="modal hidden">
-        <div class="modal-content">
-            <button id="close-modal-btn" class="close-btn">&times;</button>
-            <h2>Editar Perfil</h2>
-            <form id="profile-form">
-                <label for="profile-name-input">Nuevo Nombre:</label>
-                <input type="text" id="profile-name-input" class="modal-input" required>
-                <button type="submit" class="btn-primary">Guardar Cambios</button>
-            </form>
-        </div>
-    </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" type="module"></script>

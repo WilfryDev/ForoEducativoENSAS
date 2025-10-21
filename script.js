@@ -8,8 +8,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
     getAuth, GoogleAuthProvider, signInWithPopup,
-    signOut, onAuthStateChanged,
-    updateProfile // <-- ¡IMPORTACIÓN PARA ACTUALIZAR PERFIL!
+    signOut, onAuthStateChanged, updateProfile // updateProfile ya no se usa aquí
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // === TU CONFIGURACIÓN DE FIREBASE ===
@@ -31,7 +30,7 @@ const provider = new GoogleAuthProvider();
 
 // === VARIABLES GLOBALES ===
 let currentUser = null;
-let currentTheme = localStorage.getItem('theme') || 'dark';
+let currentTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto
 let unsubscribeOpinions = null;
 
 // === ESPERAR A QUE EL DOM ESTÉ LISTO ===
@@ -49,13 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const opinionTextarea = document.getElementById('opinion-text');
     const submitOpinionBtn = document.getElementById('submit-opinion-btn');
     const opinionsList = document.getElementById('opinions-list');
-    // *** ELEMENTOS DEL MODAL ***
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    const profileModal = document.getElementById('profile-modal');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const profileForm = document.getElementById('profile-form');
-    const profileNameInput = document.getElementById('profile-name-input');
-
+    // Ya no necesitamos los elementos del modal aquí
 
     console.log("Resultado de getElementById('theme-toggle') al cargar DOM:", themeToggleBtn);
 
@@ -87,10 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = null;
             updateLoginUI(false, null);
             loadOpinions(); // Carga opiniones incluso sin usuario
-            // Asegúrate de cerrar el modal si el usuario cierra sesión
-             if (profileModal && !profileModal.classList.contains('hidden')) {
-                closeProfileModal();
-            }
         }
     });
 
@@ -103,110 +92,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
+            try { await signInWithPopup(auth, provider); }
+            catch (error) {
                 console.error("Error al iniciar sesión con Google: ", error);
-                 if (error.code === 'auth/popup-blocked') {
-                    alert("El navegador bloqueó la ventana emergente de Google. Por favor, permite las ventanas emergentes para este sitio e inténtalo de nuevo.");
-                } else if (error.code === 'auth/cancelled-popup-request') {
-                     console.log("Inicio de sesión cancelado por el usuario.");
-                } else {
-                    alert("Error al iniciar sesión con Google.");
-                }
+                 if (error.code === 'auth/popup-blocked') { alert("Pop-up bloqueado. Permite ventanas emergentes."); }
+                 else if (error.code === 'auth/cancelled-popup-request') { console.log("Login cancelado."); }
+                 else { alert("Error al iniciar sesión."); }
             }
         });
     } else { console.error("Botón 'google-login-btn' no encontrado."); }
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
-             try {
-                await signOut(auth);
-            } catch (error) {
-                console.error("Error al cerrar sesión: ", error);
-            }
+             try { await signOut(auth); }
+             catch (error) { console.error("Error al cerrar sesión: ", error); }
         });
     }
-
-    // === FUNCIONES DEL MODAL DE PERFIL ===
-    const openProfileModal = () => {
-        if (profileModal && currentUser && profileNameInput) {
-            profileNameInput.value = currentUser.displayName || '';
-            profileModal.classList.remove('hidden');
-        } else {
-            console.error("No se pudo abrir el modal: falta modal, usuario o input.");
-        }
-    };
-
-    const closeProfileModal = () => {
-        if (profileModal) {
-            profileModal.classList.add('hidden');
-        }
-    };
-
-    if (editProfileBtn) {
-        editProfileBtn.addEventListener('click', openProfileModal);
-    } else { console.warn("Botón 'edit-profile-btn' no encontrado."); }
-
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', closeProfileModal);
-    }
-
-    if (profileModal) {
-        profileModal.addEventListener('click', (event) => {
-            if (event.target === profileModal) {
-                closeProfileModal();
-            }
-        });
-    }
-
-    // === MANEJAR ACTUALIZACIÓN DE PERFIL ===
-    const handleProfileUpdate = async (event) => {
-        event.preventDefault();
-        if (!currentUser || !profileNameInput) return;
-
-        const newName = profileNameInput.value.trim();
-        if (!newName) {
-            alert("El nombre no puede estar vacío.");
-            return;
-        }
-
-        const submitButton = profileForm ? profileForm.querySelector('button[type="submit"]') : null;
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = 'Guardando...';
-        }
-
-        try {
-            await updateProfile(auth.currentUser, { displayName: newName });
-            if (displayUsername) displayUsername.textContent = newName;
-            // Actualizar currentUser localmente para reflejar el cambio inmediatamente
-            currentUser = auth.currentUser;
-            alert("Perfil actualizado correctamente.");
-            closeProfileModal();
-            // Opcional: Recargar opiniones para reflejar el nombre en botones de eliminar (si aplica)
-            // loadOpinions(); // Descomentar si es necesario
-
-        } catch (error) {
-            console.error("Error al actualizar el perfil: ", error);
-            alert("No se pudo actualizar el perfil. Inténtalo de nuevo.");
-        } finally {
-             if (submitButton) {
-                 submitButton.disabled = false;
-                 submitButton.textContent = 'Guardar Cambios';
-             }
-        }
-    };
-
-    if (profileForm) {
-        profileForm.addEventListener('submit', handleProfileUpdate);
-    } else { console.error("Formulario 'profile-form' no encontrado."); }
 
 
     // === FUNCIONES DE FIREBASE (Opiniones y Respuestas) ===
     const loadOpinions = () => {
         if (unsubscribeOpinions) { unsubscribeOpinions(); }
-        if (!opinionsList) { console.error("Elemento 'opinions-list' no encontrado."); return; }
+        if (!opinionsList) { console.error("'opinions-list' no encontrado."); return; }
 
         const opinionsRef = collection(db, "opinions");
         const q = query(opinionsRef, orderBy("timestamp", "desc"));
@@ -290,14 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (repliesContainer) repliesContainer.appendChild(replyDiv);
     };
 
-    const showReplyForm = (container, parentOpinionId) => { /* ... (código igual) ... */ };
-    const handleReplySubmit = async (text, parentOpinionId) => { /* ... (código igual) ... */ };
-    if (submitOpinionBtn) { submitOpinionBtn.addEventListener('click', async () => { /* ... (código igual) ... */ }); }
-    const handleDeleteOpinion = async (opinionId) => { /* ... (código igual) ... */ };
-    const handleDeleteReply = async (opinionId, replyId) => { /* ... (código igual) ... */ };
-    if (opinionsList) { opinionsList.addEventListener('click', (e) => { /* ... (código igual) ... */ }); }
-
-    // Rellenar las funciones que faltan (copiar de la versión anterior)
     const showReplyForm = (container, parentOpinionId) => {
         container.innerHTML = `
             <form class="reply-form">
@@ -324,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (cancelBtn) { cancelBtn.addEventListener('click', () => { container.innerHTML = ''; }); }
     };
+
     const handleReplySubmit = async (text, parentOpinionId) => {
         if (!currentUser) return;
         try {
@@ -333,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (error) { console.error("Error al añadir respuesta: ", error); alert("Error al publicar la respuesta."); }
     };
+
     if (submitOpinionBtn) {
         submitOpinionBtn.addEventListener('click', async () => {
             const opinionText = opinionTextarea ? opinionTextarea.value.trim() : '';
@@ -347,16 +248,20 @@ document.addEventListener('DOMContentLoaded', () => {
             else { alert('Debes iniciar sesión para publicar una opinión.'); }
         });
     } else { console.error("Botón 'submit-opinion-btn' no encontrado."); }
+
+    // === Funciones de Eliminar ===
     const handleDeleteOpinion = async (opinionId) => {
-        if (!confirm("¿Estás seguro de que quieres eliminar esta opinión? Esta acción no se puede deshacer.")) return;
+        if (!confirm("¿Estás seguro de que quieres eliminar esta opinión?")) return;
         try { await deleteDoc(doc(db, "opinions", opinionId)); }
-        catch (error) { console.error("Error al eliminar la opinión: ", error); alert("No se pudo eliminar la opinión."); }
+        catch (error) { console.error("Error al eliminar la opinión: ", error); alert("No se pudo eliminar."); }
     };
     const handleDeleteReply = async (opinionId, replyId) => {
         if (!confirm("¿Estás seguro de que quieres eliminar esta respuesta?")) return;
         try { await deleteDoc(doc(db, "opinions", opinionId, "replies", replyId)); }
-        catch (error) { console.error("Error al eliminar la respuesta: ", error); alert("No se pudo eliminar la respuesta."); }
+        catch (error) { console.error("Error al eliminar la respuesta: ", error); alert("No se pudo eliminar."); }
     };
+
+    // === Event Listener Global para Clics (Eliminar) ===
      if (opinionsList) {
         opinionsList.addEventListener('click', (e) => {
             const deleteOpinionBtn = e.target.closest('.btn-delete');
