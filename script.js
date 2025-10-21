@@ -36,9 +36,8 @@ let unsubscribeOpinions = null;
 // === ESPERAR A QUE EL DOM ESTÉ LISTO ===
 document.addEventListener('DOMContentLoaded', () => {
 
-    // === Obtener TODOS los elementos del DOM aquí al principio ===
+    // === OBTENER ELEMENTOS DEL DOM (¡PRIMERO!) ===
     const themeToggleBtn = document.getElementById('theme-toggle');
-    // Mover la obtención del icono aquí TAMBIÉN, pero comprobar si el botón existe PRIMERO
     const themeToggleIcon = themeToggleBtn ? themeToggleBtn.querySelector('i') : null; 
     const loginSection = document.getElementById('login-section');
     const googleLoginBtn = document.getElementById('google-login-btn'); 
@@ -50,69 +49,64 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitOpinionBtn = document.getElementById('submit-opinion-btn');
     const opinionsList = document.getElementById('opinions-list');
 
-    // === Funciones de Tema ===
+    // === FUNCIONES DE TEMA ===
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        // ¡Comprobación extra! Solo actualiza el icono si existe
         if (themeToggleIcon) { 
             themeToggleIcon.classList.toggle('fa-moon', theme === 'light');
             themeToggleIcon.classList.toggle('fa-sun', theme === 'dark');
         } else {
-            // Si no se encuentra el icono, muestra un aviso en la consola (útil para depurar)
-            console.warn("Elemento 'themeToggleIcon' no encontrado al aplicar tema.");
+            // Solo loguea si el botón principal SÍ se encontró pero el icono no
+            if(themeToggleBtn) console.warn("Elemento 'themeToggleIcon' (i) no encontrado dentro de 'theme-toggle'.");
         }
         localStorage.setItem('theme', theme);
         currentTheme = theme;
     };
 
-    // Aplicar tema inicial AHORA que las variables existen
+    // Aplicar tema inicial ANTES de añadir listeners
     applyTheme(currentTheme); 
 
-    // Event listener del botón de tema (CON comprobación)
-    // ESTA ES LA LÍNEA 93 (aproximadamente) QUE DABA ERROR ANTES
+    // Añadir listener del botón de tema (CON comprobación)
     if (themeToggleBtn) { 
         themeToggleBtn.addEventListener('click', () => {
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             applyTheme(newTheme);
         });
     } else {
-        // Si no se encuentra el botón, muestra un aviso en la consola
         console.error("¡ERROR CRÍTICO! Botón 'theme-toggle' no encontrado. El cambio de tema no funcionará.");
     }
 
-    // === Funciones de Login/Logout con Google Auth ===
+    // === FUNCIONES DE LOGIN/LOGOUT (añadir listeners aquí) ===
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user; 
             updateLoginUI(true, user.displayName);
-            loadOpinions(); 
+            if (!unsubscribeOpinions) loadOpinions(); // Solo carga si no está ya cargando
         } else {
             currentUser = null;
             updateLoginUI(false, null);
-            loadOpinions(); 
+             if (!unsubscribeOpinions) loadOpinions(); // Carga incluso sin usuario
         }
     });
 
     const updateLoginUI = (isLoggedIn, username) => {
-        // Añadir comprobaciones por si algún elemento no se encontrara
         if (loginSection) loginSection.classList.toggle('hidden', isLoggedIn);
         if (welcomeSection) welcomeSection.classList.toggle('hidden', !isLoggedIn);
-        if (opinionSection) opinionSection.classList.toggle('hidden', !isLoggedIn);
+        // Mostrar/Ocultar sección de opinión solo si el elemento existe
+        if (opinionSection) opinionSection.classList.toggle('hidden', !isLoggedIn); 
         if (displayUsername && isLoggedIn) displayUsername.textContent = username; 
     };
 
-    // Añadir listener CON comprobación
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Error al iniciar sesión con Google: ", error);
-                // Mostrar un mensaje más amigable si es un error común de pop-up bloqueado
                 if (error.code === 'auth/popup-blocked') {
                     alert("El navegador bloqueó la ventana emergente de Google. Por favor, permite las ventanas emergentes para este sitio e inténtalo de nuevo.");
                 } else if (error.code === 'auth/cancelled-popup-request') {
-                     console.log("Inicio de sesión cancelado por el usuario."); // No mostrar alerta
+                     console.log("Inicio de sesión cancelado por el usuario."); 
                 }
                 else {
                     alert("Error al iniciar sesión con Google.");
@@ -123,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
          console.error("Botón 'google-login-btn' no encontrado.");
     }
 
-    // Añadir listener CON comprobación
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
             try {
@@ -132,39 +125,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Error al cerrar sesión: ", error);
             }
         });
-    } else {
-         console.warn("Botón 'logout-btn' no encontrado (normal si no se ha iniciado sesión)."); // Aviso menos grave
-    }
-
+    } // No necesita 'else' porque es normal que no exista si no estás logueado
 
     // === FUNCIONES DE FIREBASE (Opiniones y Respuestas) ===
-
     const loadOpinions = () => {
         if (unsubscribeOpinions) {
-            unsubscribeOpinions();
+            console.log("Cancelando oyente de opiniones anterior.");
+            unsubscribeOpinions(); // Cancela el oyente anterior si existe
         }
-        // Comprobar si opinionsList existe antes de consultar Firebase
         if (!opinionsList) {
             console.error("Elemento 'opinions-list' no encontrado. No se pueden cargar opiniones.");
             return; 
         }
 
+        console.log("Estableciendo oyente de opiniones...");
         const opinionsRef = collection(db, "opinions");
         const q = query(opinionsRef, orderBy("timestamp", "desc"));
         unsubscribeOpinions = onSnapshot(q, (querySnapshot) => {
-            opinionsList.innerHTML = ''; 
-            querySnapshot.forEach((doc) => {
-                const opinion = doc.data(); 
-                opinion.id = doc.id;      
-                addOpinionToDOM(opinion); 
-            });
-        }, (error) => { // Añadir manejo de errores para onSnapshot
+            console.log("Recibidas ", querySnapshot.size, " opiniones.");
+            opinionsList.innerHTML = ''; // Limpia antes de redibujar
+            if (querySnapshot.empty) {
+                opinionsList.innerHTML = '<p style="text-align: center; color: var(--text-light);">Aún no hay opiniones. ¡Sé el primero!</p>';
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const opinion = doc.data(); 
+                    opinion.id = doc.id;      
+                    addOpinionToDOM(opinion); 
+                });
+            }
+        }, (error) => { 
             console.error("Error al escuchar opiniones: ", error);
+            if (opinionsList) opinionsList.innerHTML = '<p style="text-align: center; color: var(--delete-color);">Error al cargar opiniones.</p>';
         });
     };
 
     const addOpinionToDOM = (opinion) => {
-        // Si opinionsList no existe, no continuar
         if (!opinionsList) return; 
 
         const opinionDiv = document.createElement('div');
@@ -179,10 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         opinionDiv.innerHTML = `
             <div class="opinion-header">
-                <span class="opinion-author">${opinion.username}</span>
+                <span class="opinion-author">${opinion.username || 'Anónimo'}</span>
                 <span class="opinion-date">${opinionDate}</span>
             </div>
-            <p class="opinion-content">${opinion.text.replace(/\n/g, '<br>')}</p> 
+            <p class="opinion-content">${(opinion.text || '').replace(/\n/g, '<br>')}</p> 
             <div class="opinion-actions">
                 <button class="btn-reply">Responder</button>
                 ${deleteButtonHTML} 
@@ -197,6 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const repliesRef = collection(db, "opinions", opinion.id, "replies");
         const qReplies = query(repliesRef, orderBy("timestamp", "asc")); 
         
+        // El listener de respuestas debe ser cancelado si la opinión se borra,
+        // pero por simplicidad, onSnapshot lo maneja bien al desaparecer el contenedor.
         onSnapshot(qReplies, (replySnapshot) => {
             if (!repliesContainer) return;
             repliesContainer.innerHTML = ''; 
@@ -218,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Debes iniciar sesión para responder.');
                     return;
                 }
-                // Toggle form visibility
                 if (replyFormContainer && replyFormContainer.querySelector('.reply-form')) {
                     replyFormContainer.innerHTML = '';
                 } else if (replyFormContainer) {
@@ -247,17 +243,20 @@ document.addEventListener('DOMContentLoaded', () => {
         replyDiv.innerHTML = `
             <div class="opinion-header">
                 <div>
-                    <span class="opinion-author">${reply.username}</span>
+                    <span class="opinion-author">${reply.username || 'Anónimo'}</span>
                     <span class="opinion-date">${replyDate}</span>
                 </div>
                 ${deleteReplyButtonHTML} 
             </div>
-            <p class="opinion-content">${reply.text.replace(/\n/g, '<br>')}</p>
+            <p class="opinion-content">${(reply.text || '').replace(/\n/g, '<br>')}</p>
         `;
         if (repliesContainer) repliesContainer.appendChild(replyDiv);
     };
 
     const showReplyForm = (container, parentOpinionId) => {
+        // Asegurarse de que el contenedor existe
+        if (!container) return; 
+        
         container.innerHTML = `
             <form class="reply-form">
                 <textarea class="reply-textarea" placeholder="Escribe tu respuesta..."></textarea>
@@ -335,13 +334,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Botón 'submit-opinion-btn' no encontrado.");
     }
 
-
     // === Funciones de Eliminar ===
     const handleDeleteOpinion = async (opinionId) => {
         if (!confirm("¿Estás seguro de que quieres eliminar esta opinión? Esta acción no se puede deshacer.")) return;
         try {
             const opinionRef = doc(db, "opinions", opinionId);
             await deleteDoc(opinionRef);
+            // Firestore onSnapshot se encargará de actualizar la UI
         } catch (error) {
             console.error("Error al eliminar la opinión: ", error);
             alert("No se pudo eliminar la opinión.");
@@ -353,6 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const replyRef = doc(db, "opinions", opinionId, "replies", replyId);
             await deleteDoc(replyRef);
+            // Firestore onSnapshot se encargará de actualizar la UI
         } catch (error) {
             console.error("Error al eliminar la respuesta: ", error);
             alert("No se pudo eliminar la respuesta.");
@@ -367,21 +367,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (deleteOpinionBtn) {
                 const opinionId = deleteOpinionBtn.dataset.opinionId;
-                if(opinionId) handleDeleteOpinion(opinionId); // Comprobar si el ID existe
+                if(opinionId) handleDeleteOpinion(opinionId); 
                 return; 
             }
             
             if (deleteReplyBtn) {
                 const opinionId = deleteReplyBtn.dataset.opinionId;
                 const replyId = deleteReplyBtn.dataset.replyId;
-                if(opinionId && replyId) handleDeleteReply(opinionId, replyId); // Comprobar IDs
+                if(opinionId && replyId) handleDeleteReply(opinionId, replyId); 
                 return; 
             }
         });
     }
 
-    // === INICIALIZACIÓN ===
-    // onAuthStateChanged se dispara al inicio y maneja la carga inicial
-    // loadOpinions() se llama dentro de onAuthStateChanged
-
-}); // Fin del DOMContentLoaded
+});

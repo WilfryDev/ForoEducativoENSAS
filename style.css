@@ -26,7 +26,7 @@ html[data-theme="dark"] {
   --text-color: #e6f1ff; /* Texto azul claro */
   --text-light: #a8b2d1; /* Texto azul grisáceo */
   /* ¡Aquí está el degradado! */
-  --bg-color: linear-gradient(180deg, #1d2b4a 0%, #121f3a 100%);
+  --bg-color-gradient: linear-gradient(180deg, #1d2b4a 0%, #121f3a 100%); /* Renombrado para claridad */
   --bg-card: #1c2a45; /* Tarjetas de azul oscuro (un poco más claro que el fondo) */
   --border-color-light: #3a5078; /* Borde azulado */
   --delete-color: #ff453a; /* Color para eliminar (oscuro) */
@@ -48,23 +48,17 @@ body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
   color: var(--text-color);
-  /* Asegura que el degradado cubra toda la pantalla */
-  min-height: 100vh;
+  background-color: var(--bg-color); /* Fondo sólido por defecto (modo claro) */
   transition: var(--transition);
+  min-height: 100vh;
 }
 
-/* Aplica el fondo (degradado o color sólido) directamente al body */
-body {
-    /* La clave es usar `background-image` si es un `linear-gradient` */
-    background-image: var(--bg-color); /* Para el degradado en modo oscuro */
-    background-color: var(--bg-color); /* Para el color sólido en modo claro */
-    background-attachment: fixed; /* Asegura que el degradado no se mueva al hacer scroll */
-}
-
-/* Si var(--bg-color) es un color sólido (modo claro), sobrescribe background-image */
-html:not([data-theme="dark"]) body {
-    background-image: none;
-    background-color: var(--bg-color);
+/* Aplicar el degradado SOLO en modo oscuro */
+html[data-theme="dark"] body {
+    background-image: var(--bg-color-gradient);
+    background-attachment: fixed; /* Mantiene el degradado fijo */
+    background-repeat: no-repeat; /* Evita repetición */
+    background-size: cover; /* Asegura que cubra todo */
 }
 
 
@@ -87,7 +81,7 @@ h1 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  padding-top: 2rem; 
+  padding-top: 2rem;
 }
 
 h2 {
@@ -110,7 +104,7 @@ h2::after {
 
 h3 {
   font-size: 1.3rem;
-  color: var(--text-color); 
+  color: var(--text-color);
 }
 
 p {
@@ -123,19 +117,19 @@ header {
   text-align: center;
   padding: 3rem 0;
   position: relative;
-  background-color: var(--bg-card); 
-  border-bottom: 1px solid var(--border-color-light); 
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color-light);
 }
 
 .header-top {
   position: absolute;
   top: 20px;
-  right: 20px; 
+  right: 20px;
 }
 
 .theme-toggle-btn {
-  background: var(--bg-color); 
-  border: none;
+  background: var(--bg-color); /* Usa el fondo del body (puede ser degradado) */
+  border: 1px solid var(--border-color-light); /* Borde sutil */
   border-radius: 50%;
   width: 45px;
   height: 45px;
@@ -147,20 +141,26 @@ header {
   transition: var(--transition);
   color: var(--text-color);
 }
+/* Asegura que el botón use color sólido en modo claro */
+html:not([data-theme="dark"]) .theme-toggle-btn {
+    background-color: var(--bg-color);
+    background-image: none;
+}
+
 
 .theme-toggle-btn:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
 
-header > .container > p { 
+header > .container > p {
   font-size: 1.1rem;
   max-width: 700px;
   margin: 0 auto 2rem;
-  color: var(--text-light); 
+  color: var(--text-light);
 }
 
-/* ===== SECCIONES DE LOGIN (ACTUALIZADO) ===== */
+/* ===== SECCIONES DE LOGIN ===== */
 .login-section, .welcome-section {
   background: var(--bg-card);
   padding: 2rem;
@@ -169,7 +169,7 @@ header > .container > p {
   max-width: 500px;
   margin: 0 auto;
   transition: var(--transition);
-  display: flex; /* Para centrar contenido si es necesario */
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -179,20 +179,17 @@ header > .container > p {
   box-shadow: var(--shadow-hover);
 }
 
-/* Ocultar elementos de login antiguos si aún existen */
 .login-input { display: none; }
 .login-section .btn-primary { display: none; }
 
-/* Texto de "Inicia sesión..." */
 .login-section p {
     font-size: 1rem;
     color: var(--text-light);
-    margin-top: 0.5rem; /* Ajuste de margen superior */
-    margin-bottom: 1.5rem; /* Margen inferior para separar del botón */
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
     text-align: center;
 }
 
-/* NUEVO: Botón de Google */
 .btn-google {
     display: inline-flex;
     align-items: center;
@@ -205,14 +202,19 @@ header > .container > p {
     font-size: 1rem;
     cursor: pointer;
     transition: var(--transition);
-    background-color: var(--bg-card); /* Fondo blanco/oscuro */
-    color: var(--text-color); /* Texto normal */
-    /* Removido margin-top para que lo maneje el p anterior */
+    background-color: var(--bg-card);
+    color: var(--text-color);
 }
 
 .btn-google:hover {
-    background-color: var(--bg-color); /* Fondo del body */
+    /* Fondo ligeramente más claro/oscuro que la tarjeta */
+    background-color: var(--bg-color);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+/* Asegura que el botón use color sólido en modo claro */
+html:not([data-theme="dark"]) .btn-google:hover {
+    background-color: var(--bg-color);
+    background-image: none;
 }
 
 .btn-google svg {
@@ -296,9 +298,9 @@ section {
   border-radius: var(--border-radius);
   padding: 1.5rem;
   box-shadow: var(--shadow);
-  margin-bottom: 2rem; 
+  margin-bottom: 2rem;
   transition: var(--transition);
-  max-width: 800px; 
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -310,7 +312,7 @@ section {
 .video-card h3 {
   font-size: 1.3rem;
   font-weight: 600;
-  color: var(--secondary-color); 
+  color: var(--secondary-color);
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -322,9 +324,9 @@ section {
   box-shadow: var(--shadow);
   font-style: italic;
   border-left: 4px solid var(--accent-color);
-  color: var(--text-light); 
-  text-align: center; 
-  margin-top: 2rem; 
+  color: var(--text-light);
+  text-align: center;
+  margin-top: 2rem;
 }
 
 /* ===== SECCIÓN DE OPINIONES ===== */
@@ -346,9 +348,15 @@ section {
   font-size: 1rem;
   resize: vertical;
   transition: var(--transition);
-  background: var(--bg-color);
+  background: var(--bg-color); /* Fondo del body */
   color: var(--text-color);
 }
+/* Asegura que el textarea use color sólido en modo claro */
+html:not([data-theme="dark"]) .opinion-textarea {
+    background-color: var(--bg-color);
+    background-image: none;
+}
+
 
 .opinion-textarea:focus {
   outline: none;
@@ -361,12 +369,17 @@ section {
 }
 
 .opinion-item {
-  background: var(--bg-color);
+  background: var(--bg-color); /* Fondo del body */
   padding: 1.5rem;
   border-radius: var(--border-radius);
   margin-bottom: 1rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: var(--transition);
+}
+/* Asegura que el item use color sólido en modo claro */
+html:not([data-theme="dark"]) .opinion-item {
+    background-color: var(--bg-color);
+    background-image: none;
 }
 
 .opinion-item:hover {
@@ -380,7 +393,7 @@ section {
   align-items: center;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
 }
 
 .opinion-author {
@@ -395,7 +408,7 @@ section {
 .opinion-content {
   color: var(--text-color);
   line-height: 1.5;
-  word-wrap: break-word; 
+  word-wrap: break-word;
 }
 
 /* ===== FOOTER ===== */
@@ -404,7 +417,7 @@ footer {
   padding: 2rem 0;
   margin-top: 2rem;
   border-top: 1px solid var(--border-color-light);
-  background-color: var(--bg-card); 
+  background-color: var(--bg-card);
 }
 
 .footer-link {
@@ -417,7 +430,6 @@ footer {
   color: var(--primary-color);
 }
 
-/* Créditos del footer */
 footer h3 {
     font-size: 0.9rem;
     color: var(--text-light);
@@ -431,7 +443,12 @@ footer h3 {
     justify-content: center;
     min-height: 100vh;
     padding: 2rem;
-    background: var(--bg-color); 
+    background: var(--bg-color); /* Usa el fondo del body */
+}
+/* Asegura que el body 404 use color sólido en modo claro */
+html:not([data-theme="dark"]) .body-404 {
+    background-color: var(--bg-color);
+    background-image: none;
 }
 
 .container-404 {
@@ -453,25 +470,25 @@ footer h3 {
 }
 
 .card-404 h1 {
-    font-size: 6rem; /* 96px */
+    font-size: 6rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    padding: 0; /* Resetea el padding del h1 principal */
+    padding: 0;
 }
 
 .card-404 h2 {
     font-size: 1.75rem;
     color: var(--text-color);
     margin-bottom: 1rem;
-    padding-bottom: 0; /* Quita la línea de color de los h2 normales */
+    padding-bottom: 0;
 }
 
 .card-404 h2::after {
-    display: none; /* Oculta la línea de color */
+    display: none;
 }
 
 .card-404 p {
@@ -481,7 +498,7 @@ footer h3 {
 
 .card-404 .btn-primary {
     width: 100%;
-    max-width: 250px; /* Evita que sea demasiado ancho */
+    max-width: 250px;
 }
 
 /* ===== UTILIDADES ===== */
@@ -493,8 +510,8 @@ footer h3 {
 
 .opinion-actions {
   margin-top: 15px;
-  display: flex; /* Para alinear botones */
-  gap: 15px; /* Espacio entre botones */
+  display: flex;
+  gap: 15px;
 }
 
 .btn-reply {
@@ -513,11 +530,10 @@ footer h3 {
   text-decoration: underline;
 }
 
-/* NUEVO: Botón de eliminar */
 .btn-delete {
   background: none;
   border: none;
-  color: var(--delete-color); /* Color rojo de eliminar */
+  color: var(--delete-color);
   font-weight: 600;
   cursor: pointer;
   font-size: 0.9rem;
@@ -529,7 +545,6 @@ footer h3 {
     text-decoration: underline;
 }
 
-/* Botón de eliminar para respuestas (pequeño) */
 .btn-delete-reply {
     background: none;
     border: none;
@@ -549,7 +564,7 @@ footer h3 {
 
 .reply-form {
   margin-top: 15px;
-  margin-left: 20px; 
+  margin-left: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -563,11 +578,17 @@ footer h3 {
   border-radius: 8px;
   font-size: 0.95rem;
   resize: vertical;
-  background: var(--bg-color);
+  background: var(--bg-color); /* Fondo del body */
   color: var(--text-color);
   font-family: inherit;
   transition: var(--transition);
 }
+/* Asegura que el textarea use color sólido en modo claro */
+html:not([data-theme="dark"]) .reply-textarea {
+    background-color: var(--bg-color);
+    background-image: none;
+}
+
 
 .reply-textarea:focus {
   outline: none;
@@ -600,9 +621,14 @@ footer h3 {
 }
 
 .btn-reply-cancel {
-  background-color: var(--bg-color);
+  background-color: var(--bg-color); /* Fondo del body */
   color: var(--text-color);
   border: 1px solid var(--border-color-light);
+}
+/* Asegura que el botón use color sólido en modo claro */
+html:not([data-theme="dark"]) .btn-reply-cancel {
+    background-color: var(--bg-color);
+    background-image: none;
 }
 
 .btn-reply-cancel:hover {
@@ -611,18 +637,18 @@ footer h3 {
 
 .replies-container {
   margin-top: 15px;
-  margin-left: 20px; 
+  margin-left: 20px;
   padding-left: 20px;
   border-left: 2px solid var(--border-color-light);
 }
 
 .reply-item {
-  background-color: var(--bg-card); 
+  background-color: var(--bg-card);
   border: 1px solid var(--border-color-light);
   padding: 1rem;
   border-radius: var(--border-radius);
   margin-bottom: 10px;
-  font-size: 0.95rem; 
+  font-size: 0.95rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
@@ -632,7 +658,7 @@ footer h3 {
   h2 { font-size: 1.5rem; }
   .container { padding: 0 15px; }
   header { padding: 2rem 0; }
-  
+
   .login-section, .welcome-section, .opinion-section {
     padding: 1.5rem;
   }
@@ -648,7 +674,7 @@ footer h3 {
 
 @media (max-width: 480px) {
   h1 { font-size: 1.8rem; }
-  
+
   .header-top {
     position: static;
     margin-bottom: 1rem;
@@ -657,12 +683,12 @@ footer h3 {
   }
 
   h1 {
-    padding-top: 0; 
+    padding-top: 0;
   }
-  
+
   .btn-primary, .btn-secondary {
     width: 100%;
-    margin-bottom: 10px; 
+    margin-bottom: 10px;
   }
 
   .btn-google {
@@ -672,4 +698,4 @@ footer h3 {
   .login-input {
     margin-bottom: 10px;
   }
-} 
+}
