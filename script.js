@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (error.code === 'auth/cancelled-popup-request') {
                      console.log("Inicio de sesión cancelado por el usuario."); 
                 }
-                else {
+                 else {
                     alert("Error al iniciar sesión con Google.");
                 }
             }
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 querySnapshot.forEach((doc) => {
                     const opinion = doc.data(); 
-                    opinion.id = doc.id;      
+                    opinion.id = doc.id;        
                     addOpinionToDOM(opinion); 
                 });
             }
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const repliesRef = collection(db, "opinions", parentOpinionId, "replies");
             await addDoc(repliesRef, {
                 username: currentUser.displayName, 
-                userId: currentUser.uid,         
+                userId: currentUser.uid,        
                 text: text,
                 timestamp: Timestamp.now()
             });
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     await addDoc(collection(db, "opinions"), {
                         username: currentUser.displayName, 
-                        userId: currentUser.uid,         
+                        userId: currentUser.uid,        
                         text: opinionText,
                         timestamp: Timestamp.now()
                     });
