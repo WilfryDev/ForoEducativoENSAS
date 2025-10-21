@@ -130,7 +130,7 @@ header {
 }
 
 .theme-toggle-btn {
-  background: var(--bg-color); /* Usa el fondo del body */
+  background: var(--bg-color); /* Usa el fondo del body (puede ser degradado) */
   border: 1px solid var(--border-color-light); /* Borde sutil */
   border-radius: 50%;
   width: 45px;
@@ -209,7 +209,8 @@ header > .container > p {
 }
 
 .btn-google:hover {
-    background-color: var(--bg-color); /* Fondo del body */
+    /* Fondo ligeramente más claro/oscuro que la tarjeta */
+    background-color: var(--bg-color);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 /* Asegura que el botón use color sólido en modo claro */
