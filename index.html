@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foro Educativo ENSAS 2025</title>
     <link rel="stylesheet" href="style.css">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -14,10 +13,10 @@
         <div class="container">
             <div class="header-top">
                 <button id="theme-toggle" class="theme-toggle-btn">
-                    <i class="fas fa-moon"></i> 
+                    <i class="fas fa-moon"></i>
                 </button>
             </div>
-            
+
             <h1>Foro Educativo ENSAS 2025 📝</h1>
             <p>¡Bienvenido, estudiante! Este es tu espacio para analizar, reflexionar y compartir ideas sobre temas importantes que nos afectan a todos.</p>
 
@@ -33,39 +32,38 @@
             <div id="welcome-section" class="welcome-section hidden">
                 <h3>Bienvenido, <span id="display-username"></span></h3>
                 <button id="logout-btn" class="btn-secondary">Cerrar Sesión</button>
-                <h3></h3>
-                <h3>El debate genera opiniones y estima el desarrollo de habilidades comunicativas.</h3>
+                <h3></h3> <h3>El debate genera opiniones y estima el desarrollo de habilidades comunicativas.</h3>
             </div>
         </div>
     </header>
 
     <main>
         <div class="container">
-            
+
             <section class="reflection-video">
                 <h2>Videos de Reflexión</h2>
-                
+
                 <div class="video-card">
                     <h3>Cortometraje 1: Chile en llamas</h3>
                     <div class="video-wrapper">
-                        <iframe 
-                            src="https://www.youtube.com/embed/5im92x9yK3w"  
-                            title="Video de Reflexión 1" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        <iframe
+                            src="https://www.youtube.com/embed/5im92x9yK3w"
+                            title="Video de Reflexión 1"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowfullscreen>
                         </iframe>
                     </div>
                 </div>
-                
+
                 <div class="video-card">
                     <h3>Cortometraje 2: Video Educativo</h3>
                     <div class="video-wrapper">
-                        <iframe 
-                            src="https://www.youtube.com/embed/2RcjQ0uxJ54"  
-                            title="Video de Reflexión 2" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        <iframe
+                            src="https://www.youtube.com/embed/2RcjQ0uxJ54"
+                            title="Video de Reflexión 2"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowfullscreen>
                         </iframe>
                     </div>
@@ -80,10 +78,9 @@
                 <h2>Deja tu Opinión (Respuesta y Debate)</h2>
                 <textarea id="opinion-text" placeholder="Escribe tu comentario aquí..." class="opinion-textarea"></textarea>
                 <button id="submit-opinion-btn" class="btn-primary">Publicar Opinión</button>
-                
+
                 <div id="opinions-list" class="opinions-list">
-                    
-                </div>
+                    </div>
             </section>
 
         </div>
@@ -104,6 +101,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" type="module"></script>
 
-    <script src="script.js" type="module" defer></script> 
+    <script src="script.js" type="module" defer></script>
 </body>
 </html>
