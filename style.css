@@ -48,12 +48,25 @@ body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
   color: var(--text-color);
-  /* Cambiado a "background" para aceptar el degradado */
-  background: var(--bg-color);
-  transition: var(--transition);
   /* Asegura que el degradado cubra toda la pantalla */
   min-height: 100vh;
+  transition: var(--transition);
 }
+
+/* Aplica el fondo (degradado o color sólido) directamente al body */
+body {
+    /* La clave es usar `background-image` si es un `linear-gradient` */
+    background-image: var(--bg-color); /* Para el degradado en modo oscuro */
+    background-color: var(--bg-color); /* Para el color sólido en modo claro */
+    background-attachment: fixed; /* Asegura que el degradado no se mueva al hacer scroll */
+}
+
+/* Si var(--bg-color) es un color sólido (modo claro), sobrescribe background-image */
+html:not([data-theme="dark"]) body {
+    background-image: none;
+    background-color: var(--bg-color);
+}
+
 
 .container {
   max-width: 1200px;
@@ -156,22 +169,27 @@ header > .container > p {
   max-width: 500px;
   margin: 0 auto;
   transition: var(--transition);
+  display: flex; /* Para centrar contenido si es necesario */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-section:hover, .welcome-section:hover {
   box-shadow: var(--shadow-hover);
 }
 
-/* Input de login (eliminado) ya no es necesario */
+/* Ocultar elementos de login antiguos si aún existen */
 .login-input { display: none; }
-/* Botón de login (eliminado) ya no es necesario */
 .login-section .btn-primary { display: none; }
 
 /* Texto de "Inicia sesión..." */
 .login-section p {
     font-size: 1rem;
     color: var(--text-light);
-    margin-top: -10px;
+    margin-top: 0.5rem; /* Ajuste de margen superior */
+    margin-bottom: 1.5rem; /* Margen inferior para separar del botón */
+    text-align: center;
 }
 
 /* NUEVO: Botón de Google */
@@ -189,7 +207,7 @@ header > .container > p {
     transition: var(--transition);
     background-color: var(--bg-card); /* Fondo blanco/oscuro */
     color: var(--text-color); /* Texto normal */
-    margin-top: 1rem;
+    /* Removido margin-top para que lo maneje el p anterior */
 }
 
 .btn-google:hover {
@@ -203,7 +221,7 @@ header > .container > p {
 }
 
 
-/* ===== BOTONES ===== */
+/* ===== BOTONES (generales) ===== */
 .btn-primary, .btn-secondary {
   display: inline-block;
   padding: 12px 24px;
@@ -647,7 +665,6 @@ footer h3 {
     margin-bottom: 10px; 
   }
 
-  /* Actualizado para el botón de Google */
   .btn-google {
     width: 100%;
   }
@@ -655,4 +672,4 @@ footer h3 {
   .login-input {
     margin-bottom: 10px;
   }
-}
+} 
