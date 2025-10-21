@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créditos - Foro Educativo ENSAS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* ===== VARIABLES Y RESET (COPIADAS DE style.css) ===== */
+        :root {
+          /* Tema Azul Claro */
+          --primary-color: #007aff;
+          --primary-dark: #0056b3;
+          --secondary-color: #5856d6;
+          --accent-color: #ff9500;
+          --text-color: #1d1d1f;
+          --text-light: #515154;
+          --bg-color: #f4f8ff;
+          --bg-card: #ffffff;
+          --input-bg: #ffffff;
+          --border-color-light: #e0e8f5;
+          --delete-color: #ff3b30;
+          --shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
+          --shadow-hover: 0 8px 24px rgba(0, 122, 255, 0.15);
+          --border-radius: 12px;
+          --transition: all 0.3s ease;
+        }
+
+        html[data-theme="dark"] {
+          /* Tema Degradado Azul Oscuro */
+          --primary-color: #0a84ff;
+          --primary-dark: #3498db;
+          --secondary-color: #bf5af2;
+          --accent-color: #ff9f0a;
+          --text-color: #e6f1ff;
+          --text-light: #a8b2d1;
+          --bg-color-gradient: linear-gradient(180deg, #1d2b4a 0%, #121f3a 100%);
+          --bg-card: #1c2a45;
+          --input-bg: #2c3a58;
+          --border-color-light: #3a5078;
+          --delete-color: #ff453a;
+          --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+          line-height: 1.6;
+          color: var(--text-color);
+          background-color: var(--bg-color);
+          transition: var(--transition);
+          min-height: 100vh;
+          display: flex; /* Para centrar contenido */
+          flex-direction: column;
+        }
+
+        html[data-theme="dark"] body {
+            background-image: var(--bg-color-gradient);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .container {
+          max-width: 800px; /* Ancho ajustado para esta página */
+          margin: auto; /* Centra el contenido */
+          padding: 2rem 20px;
+          flex-grow: 1; /* Ocupa el espacio disponible */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* ===== ESTILOS ESPECÍFICOS PARA TRABAJO.HTML ===== */
+        .credits-card {
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            width: 100%;
+        }
+
+        .credits-card h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            padding: 0; /* Reset padding */
+        }
+
+        .credits-card p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .credits-card strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .team {
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color-light);
+            padding-top: 2rem;
+        }
+
+        .team h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0; /* Sin línea */
+        }
+        .team h2::after{
+            display: none; /* Sin línea */
+        }
+
+
+        .team p {
+            font-size: 1.2rem; /* Nombres más grandes */
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link {
+            display: inline-block; /* Para que tome margen */
+            margin-top: 2rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+         /* Estilos básicos para el footer si no tienes uno global */
+         footer {
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: 2rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color-light);
+            background-color: var(--bg-card); /* Coherencia */
+         }
+         footer a {
+             color: var(--text-light);
+             text-decoration: none;
+         }
+         footer a:hover {
+             color: var(--primary-color);
+         }
+
+
+    </style>
+</head>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;"> <div class="container">
+        <div class="credits-card">
+            <h1>Créditos de Desarrollo</h1>
+            <p>Este foro educativo fue creado con dedicación por:</p>
+
+            <div class="team">
+                <h2>Equipo Principal</h2>
+                <p><strong>xGuard</strong></p>
+                <p>(Idea, Gestión y Diseño)</p>
+            </div>
+
+            <div class="team">
+                <h2>Desarrolladores</h2>
+                <p><strong>WillfryDev</strong></p>
+                <p><strong>LuisDev</strong></p>
+            </div>
+
+            <a href="index.html" class="back-link">← Volver al Foro</a>
+        </div>
+    </div>
+
+    <footer>
+         <p>&copy; 2025 Foro Educativo ENSAS. <a href="https://xguard.es" target="_blank" rel="noopener noreferrer">Powered by xGuard inc</a></p>
+    </footer>
+
+    <script>
+        // --- Bloqueo Básico ---
+        // Deshabilitar menú contextual (clic derecho)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Deshabilitar selección de texto y arrastre (puede afectar usabilidad)
+        document.addEventListener('selectstart', event => event.preventDefault());
+        document.addEventListener('dragstart', event => event.preventDefault());
+
+        // Deshabilitar ciertas teclas (Ctrl+C, Ctrl+U, etc.) - ¡CUIDADO, puede ser molesto!
+        /*
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey) {
+                // Bloquear Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+U, Ctrl+S
+                if (['c', 'x', 'v', 'u', 's'].includes(event.key.toLowerCase())) {
+                    event.preventDefault();
+                    // alert("Función deshabilitada"); // Opcional: avisar al usuario
+                }
+            }
+            // Bloquear F12
+            if (event.key === 'F12') {
+                event.preventDefault();
+                // alert("Función deshabilitada"); // Opcional
+            }
+        });
+        */
+
+       // --- Lógica del Tema (simplificada para esta página) ---
+        let currentTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto
+
+        const applyTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            // No necesitamos actualizar icono aquí si no está el botón
+            localStorage.setItem('theme', theme);
+            currentTheme = theme;
+        };
+
+        // Aplicar tema al cargar
+        applyTheme(currentTheme);
+
+        // Si quieres añadir el botón de tema también a esta página,
+        // necesitarías copiar el botón HTML y añadir este listener:
+        /*
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+            // Actualizar icono inicial
+             const themeToggleIcon = themeToggleBtn.querySelector('i');
+             if(themeToggleIcon){
+                 themeToggleIcon.classList.toggle('fa-moon', currentTheme === 'light');
+                 themeToggleIcon.classList.toggle('fa-sun', currentTheme === 'dark');
+             }
+            // Añadir listener
+            themeToggleBtn.addEventListener('click', () => {
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                applyTheme(newTheme);
+            });
+        }
+        */
+
+    </script>
+</body>
+</html>
