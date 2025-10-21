@@ -1,20 +1,16 @@
 // script.js
 
 // === IMPORTAR FUNCIONES DE FIREBASE ===
-// Estas funciones vienen de los scripts que pusimos en el index.html
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    getDocs, 
-    query, 
-    orderBy, 
-    onSnapshot,
-    Timestamp,
-    doc,
-    getDoc
+    getFirestore, collection, addDoc, query, orderBy, 
+    onSnapshot, Timestamp, doc, deleteDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ¡NUEVAS IMPORTACIONES DE AUTH!
+import { 
+    getAuth, GoogleAuthProvider, signInWithPopup, 
+    signOut, onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // === TU CONFIGURACIÓN DE FIREBASE ===
 const firebaseConfig = {
@@ -27,16 +23,17 @@ const firebaseConfig = {
   measurementId: "G-QCVKV2MH1L"
 };
 
-// === INICIALIZAR FIREBASE Y FIRESTORE ===
+// === INICIALIZAR FIREBASE Y SERVICIOS ===
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app); // ¡Nuestra base de datos!
+const db = getFirestore(app);      // Base de datos
+const auth = getAuth(app);         // Autenticación
+const provider = new GoogleAuthProvider(); // Proveedor de Google
 
-// === Elementos del DOM (igual que antes) ===
+// === Elementos del DOM ===
 const themeToggleBtn = document.getElementById('theme-toggle');
 const themeToggleIcon = themeToggleBtn.querySelector('i');
 const loginSection = document.getElementById('login-section');
-const usernameInput = document.getElementById('username-input');
-const loginBtn = document.getElementById('login-btn');
+const googleLoginBtn = document.getElementById('google-login-btn'); // Botón de Google
 const welcomeSection = document.getElementById('welcome-section');
 const displayUsername = document.getElementById('display-username');
 const logoutBtn = document.getElementById('logout-btn');
@@ -45,13 +42,12 @@ const opinionTextarea = document.getElementById('opinion-text');
 const submitOpinionBtn = document.getElementById('submit-opinion-btn');
 const opinionsList = document.getElementById('opinions-list');
 
-// El nombre de usuario ahora se guarda en una variable simple, no en localStorage
-let currentUsername = ''; 
+// === VARIABLES GLOBALES ===
+let currentUser = null; // Reemplaza a currentUsername
+let currentTheme = localStorage.getItem('theme') || 'dark';
+let unsubscribeOpinions = null; // Para el 'oyente' de Firebase
 
-// Detecta el tema guardado o usa 'dark' por defecto
-let currentTheme = localStorage.getItem('theme') || 'dark'; // <--- TEMA OSCURO POR DEFECTO
-
-// === Funciones de Tema (igual que antes) ===
+// === Funciones de Tema ===
 const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
     themeToggleIcon.classList.toggle('fa-moon', theme === 'light');
@@ -65,63 +61,75 @@ themeToggleBtn.addEventListener('click', () => {
     applyTheme(newTheme);
 });
 
-// === Funciones de Login/Logout (lógica de UI) ===
-const updateLoginUI = () => {
-    if (currentUsername) {
+// === NUEVAS Funciones de Login/Logout con Google Auth ===
+
+// 1. Oyente principal de Autenticación
+// Esto se dispara al cargar la página y cada vez que el estado de login cambia
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // Usuario ha iniciado sesión
+        currentUser = user; // Guardamos el objeto de usuario (contiene uid, displayName, email, photoURL)
+        updateLoginUI(true, user.displayName);
+        loadOpinions(); // Carga opiniones ahora que sabemos quién es el usuario
+    } else {
+        // Usuario ha cerrado sesión
+        currentUser = null;
+        updateLoginUI(false, null);
+        loadOpinions(); // Carga opiniones sin usuario (no se mostrarán botones de eliminar)
+    }
+});
+
+// 2. Función de UI
+const updateLoginUI = (isLoggedIn, username) => {
+    if (isLoggedIn) {
         loginSection.classList.add('hidden');
         welcomeSection.classList.remove('hidden');
         opinionSection.classList.remove('hidden');
-        displayUsername.textContent = currentUsername;
+        displayUsername.textContent = username; // Muestra el nombre de Google
     } else {
         loginSection.classList.remove('hidden');
         welcomeSection.classList.add('hidden');
         opinionSection.classList.add('hidden');
-        usernameInput.value = ''; 
     }
 };
 
-loginBtn.addEventListener('click', () => {
-    const username = usernameInput.value.trim();
-    if (username) {
-        currentUsername = username;
-        // Guardamos el nombre en localStorage para "recordarlo"
-        localStorage.setItem('forumUsername', username); 
-        updateLoginUI();
-    } else {
-        alert('Por favor, ingresa tu nombre para unirte al foro.');
+// 3. Eventos de clic para Iniciar y Cerrar Sesión
+googleLoginBtn.addEventListener('click', async () => {
+    try {
+        await signInWithPopup(auth, provider);
+        // onAuthStateChanged se encargará del resto
+    } catch (error) {
+        console.error("Error al iniciar sesión con Google: ", error);
+        alert("Error al iniciar sesión.");
     }
 });
 
-logoutBtn.addEventListener('click', () => {
-    currentUsername = '';
-    localStorage.removeItem('forumUsername');
-    updateLoginUI();
-});
-
-usernameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        loginBtn.click();
+logoutBtn.addEventListener('click', async () => {
+    try {
+        await signOut(auth);
+        // onAuthStateChanged se encargará del resto
+    } catch (error) {
+        console.error("Error al cerrar sesión: ", error);
     }
 });
 
-// === FUNCIONES DE FIREBASE (¡LO NUEVO!) ===
 
-/**
- * Carga todas las opiniones desde Firebase en TIEMPO REAL.
- * onSnapshot "escucha" la base de datos.
- */
+// === FUNCIONES DE FIREBASE (ACTUALIZADAS) ===
+
 const loadOpinions = () => {
+    if (unsubscribeOpinions) {
+        unsubscribeOpinions();
+    }
+
     const opinionsRef = collection(db, "opinions");
-    // Ordenamos por fecha, las más nuevas primero
     const q = query(opinionsRef, orderBy("timestamp", "desc"));
 
-    // onSnapshot es el "oyente" en tiempo real
-    onSnapshot(q, (querySnapshot) => {
-        opinionsList.innerHTML = ''; // Limpiamos la lista
+    unsubscribeOpinions = onSnapshot(q, (querySnapshot) => {
+        opinionsList.innerHTML = ''; 
         querySnapshot.forEach((doc) => {
-            const opinion = doc.data(); // Los datos del documento
-            opinion.id = doc.id;      // El ID del documento
-            addOpinionToDOM(opinion); // Lo añadimos al HTML
+            const opinion = doc.data(); 
+            opinion.id = doc.id;      
+            addOpinionToDOM(opinion); 
         });
     });
 };
@@ -134,8 +142,14 @@ const addOpinionToDOM = (opinion) => {
     opinionDiv.classList.add('opinion-item');
     opinionDiv.dataset.opinionId = opinion.id; 
 
-    // Convertimos el Timestamp de Firebase a una fecha legible
     const opinionDate = opinion.timestamp ? opinion.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
+
+    // ¡NUEVO CHECK DE SEGURIDAD!
+    // Compara el ID de usuario de Google (currentUser.uid)
+    let deleteButtonHTML = '';
+    if (currentUser && opinion.userId === currentUser.uid) {
+        deleteButtonHTML = `<button class="btn-delete" data-opinion-id="${opinion.id}">Eliminar</button>`;
+    }
 
     opinionDiv.innerHTML = `
         <div class="opinion-header">
@@ -145,36 +159,34 @@ const addOpinionToDOM = (opinion) => {
         <p class="opinion-content">${opinion.text.replace(/\n/g, '<br>')}</p> 
         <div class="opinion-actions">
             <button class="btn-reply">Responder</button>
+            ${deleteButtonHTML} 
         </div>
         <div class="replies-container"></div>
         <div class="reply-form-container"></div>
     `;
 
-    opinionsList.appendChild(opinionDiv); // Añadir al cargar
+    opinionsList.appendChild(opinionDiv); 
 
     // --- Cargar Respuestas (Replies) ---
     const repliesContainer = opinionDiv.querySelector('.replies-container');
-    // Creamos la referencia a la sub-colección de respuestas
     const repliesRef = collection(db, "opinions", opinion.id, "replies");
-    const qReplies = query(repliesRef, orderBy("timestamp", "asc")); // Las respuestas en orden
+    const qReplies = query(repliesRef, orderBy("timestamp", "asc")); 
     
-    // Escuchamos las respuestas en tiempo real
     onSnapshot(qReplies, (replySnapshot) => {
-        repliesContainer.innerHTML = ''; // Limpiamos respuestas
+        repliesContainer.innerHTML = ''; 
         replySnapshot.forEach((doc) => {
             const reply = doc.data();
             reply.id = doc.id;
-            addReplyToDOM(reply, repliesContainer);
+            addReplyToDOM(reply, repliesContainer, opinion.id); 
         });
     });
-
 
     // --- Evento del botón Responder ---
     const replyBtn = opinionDiv.querySelector('.btn-reply');
     const replyFormContainer = opinionDiv.querySelector('.reply-form-container');
     
     replyBtn.addEventListener('click', () => {
-        if (!currentUsername) {
+        if (!currentUser) { // Comprueba si el usuario está logueado
             alert('Debes iniciar sesión para responder.');
             return;
         }
@@ -189,17 +201,31 @@ const addOpinionToDOM = (opinion) => {
 /**
  * Añade una RESPUESTA (anidada) al DOM
  */
-const addReplyToDOM = (reply, repliesContainer) => {
+const addReplyToDOM = (reply, repliesContainer, opinionId) => {
     const replyDiv = document.createElement('div');
     replyDiv.classList.add('reply-item');
     replyDiv.dataset.replyId = reply.id;
     
     const replyDate = reply.timestamp ? reply.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
 
+    // ¡NUEVO CHECK DE SEGURIDAD!
+    let deleteReplyButtonHTML = '';
+    if (currentUser && reply.userId === currentUser.uid) {
+        deleteReplyButtonHTML = `
+            <button class="btn-delete-reply" 
+                    data-opinion-id="${opinionId}" 
+                    data-reply-id="${reply.id}">
+                Eliminar
+            </button>`;
+    }
+
     replyDiv.innerHTML = `
         <div class="opinion-header">
-            <span class="opinion-author">${reply.username}</span>
-            <span class="opinion-date">${replyDate}</span>
+            <div>
+                <span class="opinion-author">${reply.username}</span>
+                <span class="opinion-date">${replyDate}</span>
+            </div>
+            ${deleteReplyButtonHTML} 
         </div>
         <p class="opinion-content">${reply.text.replace(/\n/g, '<br>')}</p>
     `;
@@ -246,44 +272,37 @@ const showReplyForm = (container, parentOpinionId) => {
  */
 const handleReplySubmit = async (text, parentOpinionId) => {
     try {
-        // Creamos la referencia a la sub-colección "replies" DENTRO de la opinión
         const repliesRef = collection(db, "opinions", parentOpinionId, "replies");
-        
-        // Añadimos el nuevo documento de respuesta
         await addDoc(repliesRef, {
-            username: currentUsername,
+            username: currentUser.displayName, // Nombre de Google
+            userId: currentUser.uid,         // ID de Google
             text: text,
-            timestamp: Timestamp.now() // ¡Usamos la marca de tiempo de Firebase!
+            timestamp: Timestamp.now()
         });
-        
-        // No necesitamos añadir al DOM, ¡el "oyente" onSnapshot lo hará por nosotros!
-        
     } catch (error) {
         console.error("Error al añadir respuesta: ", error);
         alert("Error al publicar la respuesta.");
     }
 };
 
+/**
+ * Guarda la NUEVA OPINIÓN en Firebase
+ */
 submitOpinionBtn.addEventListener('click', async () => {
     const opinionText = opinionTextarea.value.trim();
-    if (opinionText && currentUsername) {
-        
+    if (opinionText && currentUser) {
         try {
-            // Añadimos un nuevo documento a la colección "opinions"
             await addDoc(collection(db, "opinions"), {
-                username: currentUsername,
+                username: currentUser.displayName, // Nombre de Google
+                userId: currentUser.uid,         // ID de Google
                 text: opinionText,
-                timestamp: Timestamp.now() // Marca de tiempo del servidor
+                timestamp: Timestamp.now()
             });
-            
-            // No necesitamos añadir al DOM, ¡onSnapshot lo hará!
             opinionTextarea.value = ''; 
-            
         } catch (error) {
             console.error("Error al añadir opinión: ", error);
             alert("Error al publicar la opinión.");
         }
-        
     } else if (!opinionText) {
         alert('Por favor, escribe tu opinión antes de publicar.');
     } else {
@@ -291,12 +310,60 @@ submitOpinionBtn.addEventListener('click', async () => {
     }
 });
 
+
+// === NUEVAS FUNCIONES DE ELIMINAR ===
+
+const handleDeleteOpinion = async (opinionId) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar esta opinión? Esta acción no se puede deshacer.")) {
+        return;
+    }
+    
+    try {
+        const opinionRef = doc(db, "opinions", opinionId);
+        await deleteDoc(opinionRef);
+    } catch (error) {
+        console.error("Error al eliminar la opinión: ", error);
+        alert("No se pudo eliminar la opinión.");
+    }
+};
+
+const handleDeleteReply = async (opinionId, replyId) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar esta respuesta?")) {
+        return;
+    }
+    
+    try {
+        const replyRef = doc(db, "opinions", opinionId, "replies", replyId);
+        await deleteDoc(replyRef);
+    } catch (error) {
+        console.error("Error al eliminar la respuesta: ", error);
+        alert("No se pudo eliminar la respuesta.");
+    }
+};
+
+// === Event Listener Global para Clics ===
+opinionsList.addEventListener('click', (e) => {
+    // Busca el botón más cercano que coincida
+    const deleteOpinionBtn = e.target.closest('.btn-delete');
+    const deleteReplyBtn = e.target.closest('.btn-delete-reply');
+
+    if (deleteOpinionBtn) {
+        const opinionId = deleteOpinionBtn.dataset.opinionId;
+        handleDeleteOpinion(opinionId);
+        return; // Detiene la ejecución
+    }
+    
+    if (deleteReplyBtn) {
+        const opinionId = deleteReplyBtn.dataset.opinionId;
+        const replyId = deleteReplyBtn.dataset.replyId;
+        handleDeleteReply(opinionId, replyId);
+        return; // Detiene la ejecución
+    }
+});
+
+
 // === INICIALIZACIÓN ===
 applyTheme(currentTheme); 
-
-// Comprobamos si el usuario ya "inició sesión" (con localStorage)
-currentUsername = localStorage.getItem('forumUsername') || '';
-updateLoginUI(); 
-
-// ¡Cargamos las opiniones desde Firebase!
-loadOpinions();
+// No es necesario llamar a updateLoginUI o loadOpinions aquí.
+// onAuthStateChanged() se disparará automáticamente al cargar 
+// y se encargará de todo.

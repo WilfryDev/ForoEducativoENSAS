@@ -10,6 +10,7 @@
   --bg-color: #f4f8ff; /* Fondo azul muy claro */
   --bg-card: #ffffff; /* Tarjetas blancas */
   --border-color-light: #e0e8f5; /* Borde azulado claro */
+  --delete-color: #ff3b30; /* Color para eliminar */
   --shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
   --shadow-hover: 0 8px 24px rgba(0, 122, 255, 0.15);
   --border-radius: 12px;
@@ -28,6 +29,7 @@ html[data-theme="dark"] {
   --bg-color: linear-gradient(180deg, #1d2b4a 0%, #121f3a 100%);
   --bg-card: #1c2a45; /* Tarjetas de azul oscuro (un poco más claro que el fondo) */
   --border-color-light: #3a5078; /* Borde azulado */
+  --delete-color: #ff453a; /* Color para eliminar (oscuro) */
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
@@ -145,7 +147,7 @@ header > .container > p {
   color: var(--text-light); 
 }
 
-/* ===== SECCIONES DE LOGIN ===== */
+/* ===== SECCIONES DE LOGIN (ACTUALIZADO) ===== */
 .login-section, .welcome-section {
   background: var(--bg-card);
   padding: 2rem;
@@ -160,23 +162,46 @@ header > .container > p {
   box-shadow: var(--shadow-hover);
 }
 
-.login-input {
-  width: 100%;
-  padding: 12px 15px;
-  margin: 15px 0;
-  border: 1px solid var(--border-color-light);
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: var(--transition);
-  background: var(--bg-color);
-  color: var(--text-color);
+/* Input de login (eliminado) ya no es necesario */
+.login-input { display: none; }
+/* Botón de login (eliminado) ya no es necesario */
+.login-section .btn-primary { display: none; }
+
+/* Texto de "Inicia sesión..." */
+.login-section p {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-top: -10px;
 }
 
-.login-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+/* NUEVO: Botón de Google */
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 24px;
+    border: 1px solid var(--border-color-light);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    background-color: var(--bg-card); /* Fondo blanco/oscuro */
+    color: var(--text-color); /* Texto normal */
+    margin-top: 1rem;
 }
+
+.btn-google:hover {
+    background-color: var(--bg-color); /* Fondo del body */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-google svg {
+    width: 18px;
+    height: 18px;
+}
+
 
 /* ===== BOTONES ===== */
 .btn-primary, .btn-secondary {
@@ -450,6 +475,8 @@ footer h3 {
 
 .opinion-actions {
   margin-top: 15px;
+  display: flex; /* Para alinear botones */
+  gap: 15px; /* Espacio entre botones */
 }
 
 .btn-reply {
@@ -467,6 +494,40 @@ footer h3 {
   color: var(--primary-dark);
   text-decoration: underline;
 }
+
+/* NUEVO: Botón de eliminar */
+.btn-delete {
+  background: none;
+  border: none;
+  color: var(--delete-color); /* Color rojo de eliminar */
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 5px 0;
+  transition: var(--transition);
+}
+
+.btn-delete:hover {
+    text-decoration: underline;
+}
+
+/* Botón de eliminar para respuestas (pequeño) */
+.btn-delete-reply {
+    background: none;
+    border: none;
+    color: var(--delete-color);
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0 5px;
+    margin-left: 10px;
+    transition: var(--transition);
+}
+
+.btn-delete-reply:hover {
+    text-decoration: underline;
+}
+
 
 .reply-form {
   margin-top: 15px;
@@ -586,7 +647,12 @@ footer h3 {
     margin-bottom: 10px; 
   }
 
+  /* Actualizado para el botón de Google */
+  .btn-google {
+    width: 100%;
+  }
+
   .login-input {
     margin-bottom: 10px;
   }
-} 
+}
