@@ -9,6 +9,7 @@
   --text-light: #515154; /* Texto gris */
   --bg-color: #f4f8ff; /* Fondo azul muy claro */
   --bg-card: #ffffff; /* Tarjetas blancas */
+  --input-bg: #ffffff; /* Fondo blanco para inputs en modo claro */
   --border-color-light: #e0e8f5; /* Borde azulado claro */
   --delete-color: #ff3b30; /* Color para eliminar */
   --shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
@@ -26,8 +27,9 @@ html[data-theme="dark"] {
   --text-color: #e6f1ff; /* Texto azul claro */
   --text-light: #a8b2d1; /* Texto azul grisáceo */
   /* ¡Aquí está el degradado! */
-  --bg-color-gradient: linear-gradient(180deg, #1d2b4a 0%, #121f3a 100%); /* Renombrado para claridad */
+  --bg-color-gradient: linear-gradient(180deg, #1d2b4a 0%, #121f3a 100%);
   --bg-card: #1c2a45; /* Tarjetas de azul oscuro (un poco más claro que el fondo) */
+  --input-bg: #2c3a58; /* Fondo azulado oscuro para inputs */
   --border-color-light: #3a5078; /* Borde azulado */
   --delete-color: #ff453a; /* Color para eliminar (oscuro) */
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -348,15 +350,9 @@ section {
   font-size: 1rem;
   resize: vertical;
   transition: var(--transition);
-  background: var(--bg-color); /* Fondo del body */
+  background: var(--input-bg); /* <-- CORREGIDO */
   color: var(--text-color);
 }
-/* Asegura que el textarea use color sólido en modo claro */
-html:not([data-theme="dark"]) .opinion-textarea {
-    background-color: var(--bg-color);
-    background-image: none;
-}
-
 
 .opinion-textarea:focus {
   outline: none;
@@ -369,17 +365,13 @@ html:not([data-theme="dark"]) .opinion-textarea {
 }
 
 .opinion-item {
-  background: var(--bg-color); /* Fondo del body */
+  background: var(--bg-card); /* <-- CORREGIDO */
   padding: 1.5rem;
   border-radius: var(--border-radius);
   margin-bottom: 1rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: var(--transition);
-}
-/* Asegura que el item use color sólido en modo claro */
-html:not([data-theme="dark"]) .opinion-item {
-    background-color: var(--bg-color);
-    background-image: none;
+  border: 1px solid var(--border-color-light); /* Borde añadido */
 }
 
 .opinion-item:hover {
@@ -578,17 +570,11 @@ html:not([data-theme="dark"]) .body-404 {
   border-radius: 8px;
   font-size: 0.95rem;
   resize: vertical;
-  background: var(--bg-color); /* Fondo del body */
+  background: var(--input-bg); /* <-- CORREGIDO */
   color: var(--text-color);
   font-family: inherit;
   transition: var(--transition);
 }
-/* Asegura que el textarea use color sólido en modo claro */
-html:not([data-theme="dark"]) .reply-textarea {
-    background-color: var(--bg-color);
-    background-image: none;
-}
-
 
 .reply-textarea:focus {
   outline: none;
@@ -621,14 +607,9 @@ html:not([data-theme="dark"]) .reply-textarea {
 }
 
 .btn-reply-cancel {
-  background-color: var(--bg-color); /* Fondo del body */
+  background-color: var(--input-bg); /* <-- CORREGIDO */
   color: var(--text-color);
   border: 1px solid var(--border-color-light);
-}
-/* Asegura que el botón use color sólido en modo claro */
-html:not([data-theme="dark"]) .btn-reply-cancel {
-    background-color: var(--bg-color);
-    background-image: none;
 }
 
 .btn-reply-cancel:hover {
