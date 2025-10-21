@@ -2,13 +2,13 @@
 
 // === IMPORTAR FUNCIONES DE FIREBASE ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-    getFirestore, collection, addDoc, query, orderBy, 
-    onSnapshot, Timestamp, doc, deleteDoc 
+import {
+    getFirestore, collection, addDoc, query, orderBy,
+    onSnapshot, Timestamp, doc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { 
-    getAuth, GoogleAuthProvider, signInWithPopup, 
-    signOut, onAuthStateChanged 
+import {
+    getAuth, GoogleAuthProvider, signInWithPopup,
+    signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // === TU CONFIGURACIÓN DE FIREBASE ===
@@ -29,18 +29,18 @@ const auth = getAuth(app);         // Autenticación
 const provider = new GoogleAuthProvider(); // Proveedor de Google
 
 // === VARIABLES GLOBALES ===
-let currentUser = null; 
+let currentUser = null;
 let currentTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto
-let unsubscribeOpinions = null; 
+let unsubscribeOpinions = null;
 
 // === ESPERAR A QUE EL DOM ESTÉ LISTO ===
 document.addEventListener('DOMContentLoaded', () => {
 
-    // === OBTENER ELEMENTOS DEL DOM (¡PRIMERO!) ===
+    // === Obtener TODOS los elementos del DOM aquí al principio ===
     const themeToggleBtn = document.getElementById('theme-toggle');
-    const themeToggleIcon = themeToggleBtn ? themeToggleBtn.querySelector('i') : null; 
+    const themeToggleIcon = themeToggleBtn ? themeToggleBtn.querySelector('i') : null;
     const loginSection = document.getElementById('login-section');
-    const googleLoginBtn = document.getElementById('google-login-btn'); 
+    const googleLoginBtn = document.getElementById('google-login-btn');
     const welcomeSection = document.getElementById('welcome-section');
     const displayUsername = document.getElementById('display-username');
     const logoutBtn = document.getElementById('logout-btn');
@@ -49,52 +49,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitOpinionBtn = document.getElementById('submit-opinion-btn');
     const opinionsList = document.getElementById('opinions-list');
 
-    // === FUNCIONES DE TEMA ===
+    // !!! AÑADIDO PARA DEPURACIÓN !!!
+    console.log("Resultado de getElementById('theme-toggle') al cargar DOM:", themeToggleBtn);
+
+    // === Funciones de Tema ===
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        if (themeToggleIcon) { 
+        if (themeToggleIcon) {
             themeToggleIcon.classList.toggle('fa-moon', theme === 'light');
             themeToggleIcon.classList.toggle('fa-sun', theme === 'dark');
         } else {
-            // Solo loguea si el botón principal SÍ se encontró pero el icono no
-            if(themeToggleBtn) console.warn("Elemento 'themeToggleIcon' (i) no encontrado dentro de 'theme-toggle'.");
+            console.warn("Elemento 'themeToggleIcon' no encontrado al aplicar tema.");
         }
         localStorage.setItem('theme', theme);
         currentTheme = theme;
     };
 
-    // Aplicar tema inicial ANTES de añadir listeners
-    applyTheme(currentTheme); 
+    // Aplicar tema inicial AHORA que los elementos existen
+    applyTheme(currentTheme);
 
-    // Añadir listener del botón de tema (CON comprobación)
-    if (themeToggleBtn) { 
+    // Event listener del botón de tema (CON comprobación)
+    if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             applyTheme(newTheme);
         });
     } else {
-        console.error("¡ERROR CRÍTICO! Botón 'theme-toggle' no encontrado. El cambio de tema no funcionará.");
+        // Este mensaje es clave. Si lo ves, el ID en el HTML está mal o falta.
+        console.error("¡ERROR CRÍTICO! Botón con id='theme-toggle' NO encontrado en el HTML al añadir EventListener.");
     }
 
-    // === FUNCIONES DE LOGIN/LOGOUT (añadir listeners aquí) ===
+    // === Funciones de Login/Logout con Google Auth ===
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            currentUser = user; 
+            currentUser = user;
             updateLoginUI(true, user.displayName);
-            if (!unsubscribeOpinions) loadOpinions(); // Solo carga si no está ya cargando
+            loadOpinions();
         } else {
             currentUser = null;
             updateLoginUI(false, null);
-             if (!unsubscribeOpinions) loadOpinions(); // Carga incluso sin usuario
+            loadOpinions();
         }
     });
 
     const updateLoginUI = (isLoggedIn, username) => {
         if (loginSection) loginSection.classList.toggle('hidden', isLoggedIn);
         if (welcomeSection) welcomeSection.classList.toggle('hidden', !isLoggedIn);
-        // Mostrar/Ocultar sección de opinión solo si el elemento existe
-        if (opinionSection) opinionSection.classList.toggle('hidden', !isLoggedIn); 
-        if (displayUsername && isLoggedIn) displayUsername.textContent = username; 
+        if (opinionSection) opinionSection.classList.toggle('hidden', !isLoggedIn);
+        if (displayUsername && isLoggedIn) displayUsername.textContent = username;
     };
 
     if (googleLoginBtn) {
@@ -106,9 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (error.code === 'auth/popup-blocked') {
                     alert("El navegador bloqueó la ventana emergente de Google. Por favor, permite las ventanas emergentes para este sitio e inténtalo de nuevo.");
                 } else if (error.code === 'auth/cancelled-popup-request') {
-                     console.log("Inicio de sesión cancelado por el usuario."); 
+                     console.log("Inicio de sesión cancelado por el usuario.");
                 }
-                 else {
+                else {
                     alert("Error al iniciar sesión con Google.");
                 }
             }
@@ -125,46 +127,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Error al cerrar sesión: ", error);
             }
         });
-    } // No necesita 'else' porque es normal que no exista si no estás logueado
+    } else {
+         // Ya no es un warning, es normal que no exista si no estás logueado
+         // console.log("Botón 'logout-btn' no encontrado (normal si no se ha iniciado sesión).");
+    }
+
 
     // === FUNCIONES DE FIREBASE (Opiniones y Respuestas) ===
+
     const loadOpinions = () => {
         if (unsubscribeOpinions) {
-            console.log("Cancelando oyente de opiniones anterior.");
-            unsubscribeOpinions(); // Cancela el oyente anterior si existe
+            unsubscribeOpinions();
         }
         if (!opinionsList) {
             console.error("Elemento 'opinions-list' no encontrado. No se pueden cargar opiniones.");
-            return; 
+            return;
         }
 
-        console.log("Estableciendo oyente de opiniones...");
         const opinionsRef = collection(db, "opinions");
         const q = query(opinionsRef, orderBy("timestamp", "desc"));
         unsubscribeOpinions = onSnapshot(q, (querySnapshot) => {
-            console.log("Recibidas ", querySnapshot.size, " opiniones.");
-            opinionsList.innerHTML = ''; // Limpia antes de redibujar
-            if (querySnapshot.empty) {
-                opinionsList.innerHTML = '<p style="text-align: center; color: var(--text-light);">Aún no hay opiniones. ¡Sé el primero!</p>';
-            } else {
-                querySnapshot.forEach((doc) => {
-                    const opinion = doc.data(); 
-                    opinion.id = doc.id;        
-                    addOpinionToDOM(opinion); 
-                });
-            }
-        }, (error) => { 
+            opinionsList.innerHTML = '';
+            querySnapshot.forEach((doc) => {
+                const opinion = doc.data();
+                opinion.id = doc.id;
+                addOpinionToDOM(opinion);
+            });
+        }, (error) => {
             console.error("Error al escuchar opiniones: ", error);
-            if (opinionsList) opinionsList.innerHTML = '<p style="text-align: center; color: var(--delete-color);">Error al cargar opiniones.</p>';
         });
     };
 
     const addOpinionToDOM = (opinion) => {
-        if (!opinionsList) return; 
+        if (!opinionsList) return;
 
         const opinionDiv = document.createElement('div');
         opinionDiv.classList.add('opinion-item');
-        opinionDiv.dataset.opinionId = opinion.id; 
+        opinionDiv.dataset.opinionId = opinion.id;
 
         const opinionDate = opinion.timestamp ? opinion.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
         let deleteButtonHTML = '';
@@ -174,33 +173,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         opinionDiv.innerHTML = `
             <div class="opinion-header">
-                <span class="opinion-author">${opinion.username || 'Anónimo'}</span>
+                <span class="opinion-author">${opinion.username}</span>
                 <span class="opinion-date">${opinionDate}</span>
             </div>
-            <p class="opinion-content">${(opinion.text || '').replace(/\n/g, '<br>')}</p> 
+            <p class="opinion-content">${opinion.text.replace(/\n/g, '<br>')}</p>
             <div class="opinion-actions">
                 <button class="btn-reply">Responder</button>
-                ${deleteButtonHTML} 
+                ${deleteButtonHTML}
             </div>
             <div class="replies-container"></div>
             <div class="reply-form-container"></div>
         `;
 
-        opinionsList.appendChild(opinionDiv); 
+        opinionsList.appendChild(opinionDiv);
 
         const repliesContainer = opinionDiv.querySelector('.replies-container');
         const repliesRef = collection(db, "opinions", opinion.id, "replies");
-        const qReplies = query(repliesRef, orderBy("timestamp", "asc")); 
-        
-        // El listener de respuestas debe ser cancelado si la opinión se borra,
-        // pero por simplicidad, onSnapshot lo maneja bien al desaparecer el contenedor.
+        const qReplies = query(repliesRef, orderBy("timestamp", "asc"));
+
         onSnapshot(qReplies, (replySnapshot) => {
             if (!repliesContainer) return;
-            repliesContainer.innerHTML = ''; 
+            repliesContainer.innerHTML = '';
             replySnapshot.forEach((doc) => {
                 const reply = doc.data();
                 reply.id = doc.id;
-                addReplyToDOM(reply, repliesContainer, opinion.id); 
+                addReplyToDOM(reply, repliesContainer, opinion.id);
             });
         }, (error) => {
              console.error(`Error al escuchar respuestas para opinión ${opinion.id}: `, error);
@@ -208,10 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const replyBtn = opinionDiv.querySelector('.btn-reply');
         const replyFormContainer = opinionDiv.querySelector('.reply-form-container');
-        
+
         if (replyBtn) {
             replyBtn.addEventListener('click', () => {
-                if (!currentUser) { 
+                if (!currentUser) {
                     alert('Debes iniciar sesión para responder.');
                     return;
                 }
@@ -228,13 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const replyDiv = document.createElement('div');
         replyDiv.classList.add('reply-item');
         replyDiv.dataset.replyId = reply.id;
-        
+
         const replyDate = reply.timestamp ? reply.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
         let deleteReplyButtonHTML = '';
         if (currentUser && reply.userId === currentUser.uid) {
             deleteReplyButtonHTML = `
-                <button class="btn-delete-reply" 
-                        data-opinion-id="${opinionId}" 
+                <button class="btn-delete-reply"
+                        data-opinion-id="${opinionId}"
                         data-reply-id="${reply.id}">
                     Eliminar
                 </button>`;
@@ -243,20 +240,17 @@ document.addEventListener('DOMContentLoaded', () => {
         replyDiv.innerHTML = `
             <div class="opinion-header">
                 <div>
-                    <span class="opinion-author">${reply.username || 'Anónimo'}</span>
+                    <span class="opinion-author">${reply.username}</span>
                     <span class="opinion-date">${replyDate}</span>
                 </div>
-                ${deleteReplyButtonHTML} 
+                ${deleteReplyButtonHTML}
             </div>
-            <p class="opinion-content">${(reply.text || '').replace(/\n/g, '<br>')}</p>
+            <p class="opinion-content">${reply.text.replace(/\n/g, '<br>')}</p>
         `;
         if (repliesContainer) repliesContainer.appendChild(replyDiv);
     };
 
     const showReplyForm = (container, parentOpinionId) => {
-        // Asegurarse de que el contenedor existe
-        if (!container) return; 
-        
         container.innerHTML = `
             <form class="reply-form">
                 <textarea class="reply-textarea" placeholder="Escribe tu respuesta..."></textarea>
@@ -270,8 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const form = container.querySelector('.reply-form');
         const cancelBtn = container.querySelector('.btn-reply-cancel');
         const textarea = form.querySelector('.reply-textarea');
-        
-        if (textarea) textarea.focus(); 
+
+        if (textarea) textarea.focus();
 
         if (form) {
             form.addEventListener('submit', (e) => {
@@ -279,25 +273,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const replyText = textarea ? textarea.value.trim() : '';
                 if (replyText) {
                     handleReplySubmit(replyText, parentOpinionId);
-                    container.innerHTML = ''; 
+                    container.innerHTML = '';
                 }
             });
         }
 
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
-                container.innerHTML = ''; 
+                container.innerHTML = '';
             });
         }
     };
 
     const handleReplySubmit = async (text, parentOpinionId) => {
-        if (!currentUser) return; 
+        if (!currentUser) return;
         try {
             const repliesRef = collection(db, "opinions", parentOpinionId, "replies");
             await addDoc(repliesRef, {
-                username: currentUser.displayName, 
-                userId: currentUser.uid,        
+                username: currentUser.displayName,
+                userId: currentUser.uid,
                 text: text,
                 timestamp: Timestamp.now()
             });
@@ -307,19 +301,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Añadir listener CON comprobación
     if (submitOpinionBtn) {
         submitOpinionBtn.addEventListener('click', async () => {
             const opinionText = opinionTextarea ? opinionTextarea.value.trim() : '';
             if (opinionText && currentUser) {
                 try {
                     await addDoc(collection(db, "opinions"), {
-                        username: currentUser.displayName, 
-                        userId: currentUser.uid,        
+                        username: currentUser.displayName,
+                        userId: currentUser.uid,
                         text: opinionText,
                         timestamp: Timestamp.now()
                     });
-                    if (opinionTextarea) opinionTextarea.value = ''; 
+                    if (opinionTextarea) opinionTextarea.value = '';
                 } catch (error) {
                     console.error("Error al añadir opinión: ", error);
                     alert("Error al publicar la opinión.");
@@ -340,7 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const opinionRef = doc(db, "opinions", opinionId);
             await deleteDoc(opinionRef);
-            // Firestore onSnapshot se encargará de actualizar la UI
         } catch (error) {
             console.error("Error al eliminar la opinión: ", error);
             alert("No se pudo eliminar la opinión.");
@@ -352,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const replyRef = doc(db, "opinions", opinionId, "replies", replyId);
             await deleteDoc(replyRef);
-            // Firestore onSnapshot se encargará de actualizar la UI
         } catch (error) {
             console.error("Error al eliminar la respuesta: ", error);
             alert("No se pudo eliminar la respuesta.");
@@ -367,17 +358,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (deleteOpinionBtn) {
                 const opinionId = deleteOpinionBtn.dataset.opinionId;
-                if(opinionId) handleDeleteOpinion(opinionId); 
-                return; 
+                if(opinionId) handleDeleteOpinion(opinionId);
+                return;
             }
-            
+
             if (deleteReplyBtn) {
                 const opinionId = deleteReplyBtn.dataset.opinionId;
                 const replyId = deleteReplyBtn.dataset.replyId;
-                if(opinionId && replyId) handleDeleteReply(opinionId, replyId); 
-                return; 
+                if(opinionId && replyId) handleDeleteReply(opinionId, replyId);
+                return;
             }
         });
     }
 
-});
+    // === INICIALIZACIÓN ===
+    // onAuthStateChanged se dispara al inicio y maneja la carga inicial
+    // loadOpinions() se llama dentro de onAuthStateChanged
+
+}); // Fin del DOMContentLoaded
