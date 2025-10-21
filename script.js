@@ -30,16 +30,16 @@ const provider = new GoogleAuthProvider(); // Proveedor de Google
 
 // === VARIABLES GLOBALES ===
 let currentUser = null; 
-let currentTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto si no hay nada guardado
+let currentTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto
 let unsubscribeOpinions = null; 
 
 // === ESPERAR A QUE EL DOM ESTÉ LISTO ===
-// Todo el código que interactúa con el HTML va DENTRO de este bloque
 document.addEventListener('DOMContentLoaded', () => {
 
-    // === Elementos del DOM (Movidos aquí dentro) ===
+    // === Obtener TODOS los elementos del DOM aquí al principio ===
     const themeToggleBtn = document.getElementById('theme-toggle');
-    const themeToggleIcon = themeToggleBtn.querySelector('i'); // Ahora seguro porque themeToggleBtn existe
+    // Mover la obtención del icono aquí TAMBIÉN, pero comprobar si el botón existe PRIMERO
+    const themeToggleIcon = themeToggleBtn ? themeToggleBtn.querySelector('i') : null; 
     const loginSection = document.getElementById('login-section');
     const googleLoginBtn = document.getElementById('google-login-btn'); 
     const welcomeSection = document.getElementById('welcome-section');
@@ -53,24 +53,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Funciones de Tema ===
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        // Asegurarse de que themeToggleIcon exista antes de usarlo
+        // ¡Comprobación extra! Solo actualiza el icono si existe
         if (themeToggleIcon) { 
             themeToggleIcon.classList.toggle('fa-moon', theme === 'light');
             themeToggleIcon.classList.toggle('fa-sun', theme === 'dark');
+        } else {
+            // Si no se encuentra el icono, muestra un aviso en la consola (útil para depurar)
+            console.warn("Elemento 'themeToggleIcon' no encontrado al aplicar tema.");
         }
         localStorage.setItem('theme', theme);
         currentTheme = theme;
     };
 
-    // Aplicar tema inicial AHORA que los elementos existen
+    // Aplicar tema inicial AHORA que las variables existen
     applyTheme(currentTheme); 
 
-    // Event listener del botón de tema (Ahora seguro)
-    if (themeToggleBtn) {
+    // Event listener del botón de tema (CON comprobación)
+    // ESTA ES LA LÍNEA 93 (aproximadamente) QUE DABA ERROR ANTES
+    if (themeToggleBtn) { 
         themeToggleBtn.addEventListener('click', () => {
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             applyTheme(newTheme);
         });
+    } else {
+        // Si no se encuentra el botón, muestra un aviso en la consola
+        console.error("¡ERROR CRÍTICO! Botón 'theme-toggle' no encontrado. El cambio de tema no funcionará.");
     }
 
     // === Funciones de Login/Logout con Google Auth ===
@@ -87,24 +94,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const updateLoginUI = (isLoggedIn, username) => {
-        // Añadir comprobaciones por si algún elemento no se encontrara (más robusto)
+        // Añadir comprobaciones por si algún elemento no se encontrara
         if (loginSection) loginSection.classList.toggle('hidden', isLoggedIn);
         if (welcomeSection) welcomeSection.classList.toggle('hidden', !isLoggedIn);
         if (opinionSection) opinionSection.classList.toggle('hidden', !isLoggedIn);
         if (displayUsername && isLoggedIn) displayUsername.textContent = username; 
     };
 
+    // Añadir listener CON comprobación
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Error al iniciar sesión con Google: ", error);
-                alert("Error al iniciar sesión.");
+                // Mostrar un mensaje más amigable si es un error común de pop-up bloqueado
+                if (error.code === 'auth/popup-blocked') {
+                    alert("El navegador bloqueó la ventana emergente de Google. Por favor, permite las ventanas emergentes para este sitio e inténtalo de nuevo.");
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                     console.log("Inicio de sesión cancelado por el usuario."); // No mostrar alerta
+                }
+                else {
+                    alert("Error al iniciar sesión con Google.");
+                }
             }
         });
+    } else {
+         console.error("Botón 'google-login-btn' no encontrado.");
     }
 
+    // Añadir listener CON comprobación
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
             try {
@@ -113,6 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Error al cerrar sesión: ", error);
             }
         });
+    } else {
+         console.warn("Botón 'logout-btn' no encontrado (normal si no se ha iniciado sesión)."); // Aviso menos grave
     }
 
 
@@ -122,20 +143,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (unsubscribeOpinions) {
             unsubscribeOpinions();
         }
+        // Comprobar si opinionsList existe antes de consultar Firebase
+        if (!opinionsList) {
+            console.error("Elemento 'opinions-list' no encontrado. No se pueden cargar opiniones.");
+            return; 
+        }
+
         const opinionsRef = collection(db, "opinions");
         const q = query(opinionsRef, orderBy("timestamp", "desc"));
         unsubscribeOpinions = onSnapshot(q, (querySnapshot) => {
-            if (!opinionsList) return; // Salir si la lista no existe
             opinionsList.innerHTML = ''; 
             querySnapshot.forEach((doc) => {
                 const opinion = doc.data(); 
                 opinion.id = doc.id;      
                 addOpinionToDOM(opinion); 
             });
+        }, (error) => { // Añadir manejo de errores para onSnapshot
+            console.error("Error al escuchar opiniones: ", error);
         });
     };
 
     const addOpinionToDOM = (opinion) => {
+        // Si opinionsList no existe, no continuar
+        if (!opinionsList) return; 
+
         const opinionDiv = document.createElement('div');
         opinionDiv.classList.add('opinion-item');
         opinionDiv.dataset.opinionId = opinion.id; 
@@ -160,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="reply-form-container"></div>
         `;
 
-        if (opinionsList) opinionsList.appendChild(opinionDiv); 
+        opinionsList.appendChild(opinionDiv); 
 
         const repliesContainer = opinionDiv.querySelector('.replies-container');
         const repliesRef = collection(db, "opinions", opinion.id, "replies");
@@ -174,6 +205,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 reply.id = doc.id;
                 addReplyToDOM(reply, repliesContainer, opinion.id); 
             });
+        }, (error) => {
+             console.error(`Error al escuchar respuestas para opinión ${opinion.id}: `, error);
         });
 
         const replyBtn = opinionDiv.querySelector('.btn-reply');
@@ -185,9 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Debes iniciar sesión para responder.');
                     return;
                 }
-                if (replyFormContainer.querySelector('.reply-form')) {
+                // Toggle form visibility
+                if (replyFormContainer && replyFormContainer.querySelector('.reply-form')) {
                     replyFormContainer.innerHTML = '';
-                } else {
+                } else if (replyFormContainer) {
                     showReplyForm(replyFormContainer, opinion.id);
                 }
             });
@@ -259,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleReplySubmit = async (text, parentOpinionId) => {
-        if (!currentUser) return; // Seguridad extra
+        if (!currentUser) return; 
         try {
             const repliesRef = collection(db, "opinions", parentOpinionId, "replies");
             await addDoc(repliesRef, {
@@ -274,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Añadir listener CON comprobación
     if (submitOpinionBtn) {
         submitOpinionBtn.addEventListener('click', async () => {
             const opinionText = opinionTextarea ? opinionTextarea.value.trim() : '';
@@ -296,6 +331,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Debes iniciar sesión para publicar una opinión.');
             }
         });
+    } else {
+        console.error("Botón 'submit-opinion-btn' no encontrado.");
     }
 
 
@@ -322,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // === Event Listener Global para Clics (Eliminar) ===
+    // === Event Listener Global para Clics (Eliminar) CON comprobación ===
     if (opinionsList) {
         opinionsList.addEventListener('click', (e) => {
             const deleteOpinionBtn = e.target.closest('.btn-delete');
@@ -330,14 +367,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (deleteOpinionBtn) {
                 const opinionId = deleteOpinionBtn.dataset.opinionId;
-                handleDeleteOpinion(opinionId);
+                if(opinionId) handleDeleteOpinion(opinionId); // Comprobar si el ID existe
                 return; 
             }
             
             if (deleteReplyBtn) {
                 const opinionId = deleteReplyBtn.dataset.opinionId;
                 const replyId = deleteReplyBtn.dataset.replyId;
-                handleDeleteReply(opinionId, replyId);
+                if(opinionId && replyId) handleDeleteReply(opinionId, replyId); // Comprobar IDs
                 return; 
             }
         });
