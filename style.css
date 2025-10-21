@@ -1,14 +1,15 @@
+/* ===== VARIABLES Y RESET (TEMA AZUL) ===== */
 :root {
-
-  --primary-color: #007aff;
-  --primary-dark: #0056b3;
-  --secondary-color: #5856d6;
-  --accent-color: #ff9500;
-  --text-color: #1d1d1f;
-  --text-light: #515154;
-  --bg-color: #f4f8ff;
-  --bg-card: #ffffff;
-  --border-color-light: #e0e8f5;
+  /* Tema Azul Claro (Modo Claro) */
+  --primary-color: #007aff; /* Azul primario brillante */
+  --primary-dark: #0056b3; /* Azul oscuro para hover */
+  --secondary-color: #5856d6; /* Un morado/azul secundario */
+  --accent-color: #ff9500; /* Acento naranja */
+  --text-color: #1d1d1f; /* Texto oscuro (casi negro) */
+  --text-light: #515154; /* Texto gris */
+  --bg-color: #f4f8ff; /* Fondo azul muy claro */
+  --bg-card: #ffffff; /* Tarjetas blancas */
+  --border-color-light: #e0e8f5; /* Borde azulado claro */
   --shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
   --shadow-hover: 0 8px 24px rgba(0, 122, 255, 0.15);
   --border-radius: 12px;
@@ -16,15 +17,17 @@
 }
 
 html[data-theme="dark"] {
-  --primary-color: #0a84ff;
+  /* Tema Degradado Azul Oscuro (Modo Oscuro) */
+  --primary-color: #0a84ff; /* Azul brillante para enlaces */
   --primary-dark: #3498db;
-  --secondary-color: #bf5af2;
-  --accent-color: #ff9f0a;
-  --text-color: #e6f1ff;
-  --text-light: #a8b2d1;
-  --bg-color: linear-gradient(170deg, #1c2a45 0%, #101827 100%);
-  --bg-card: #1c2a45;
-  --border-color-light: #3a5078;
+  --secondary-color: #bf5af2; /* Morado/Fucsia para acentos */
+  --accent-color: #ff9f0a; /* Acento naranja */
+  --text-color: #e6f1ff; /* Texto azul claro */
+  --text-light: #a8b2d1; /* Texto azul grisáceo */
+  /* ¡Aquí está el degradado! */
+  --bg-color: linear-gradient(180deg, #1d2b4a 0%, #121f3a 100%);
+  --bg-card: #1c2a45; /* Tarjetas de azul oscuro (un poco más claro que el fondo) */
+  --border-color-light: #3a5078; /* Borde azulado */
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
@@ -43,8 +46,10 @@ body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
   color: var(--text-color);
+  /* Cambiado a "background" para aceptar el degradado */
   background: var(--bg-color);
   transition: var(--transition);
+  /* Asegura que el degradado cubra toda la pantalla */
   min-height: 100vh;
 }
 
@@ -54,6 +59,7 @@ body {
   padding: 0 20px;
 }
 
+/* ===== TIPOGRAFÍA ===== */
 h1, h2, h3 {
   font-weight: 700;
   line-height: 1.2;
@@ -97,6 +103,7 @@ p {
   color: var(--text-light);
 }
 
+/* ===== HEADER ===== */
 header {
   text-align: center;
   padding: 3rem 0;
@@ -138,6 +145,7 @@ header > .container > p {
   color: var(--text-light); 
 }
 
+/* ===== SECCIONES DE LOGIN ===== */
 .login-section, .welcome-section {
   background: var(--bg-card);
   padding: 2rem;
@@ -170,6 +178,7 @@ header > .container > p {
   box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
 }
 
+/* ===== BOTONES ===== */
 .btn-primary, .btn-secondary {
   display: inline-block;
   padding: 12px 24px;
@@ -204,6 +213,7 @@ header > .container > p {
   background: rgba(0, 122, 255, 0.1);
 }
 
+/* ===== SECCIONES PRINCIPALES ===== */
 main {
   padding: 2rem 0;
 }
@@ -212,9 +222,10 @@ section {
   margin-bottom: 4rem;
 }
 
+/* ===== VIDEOS ===== */
 .video-wrapper {
   position: relative;
-  padding-bottom: 56.25%;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
   height: 0;
   overflow: hidden;
   border-radius: var(--border-radius);
@@ -236,6 +247,7 @@ section {
   border: none;
 }
 
+/* ===== SECCIÓN DE REFLEXIÓN ===== */
 .video-card {
   background-color: var(--bg-card);
   border-radius: var(--border-radius);
@@ -272,6 +284,7 @@ section {
   margin-top: 2rem; 
 }
 
+/* ===== SECCIÓN DE OPINIONES ===== */
 .opinion-section {
   background: var(--bg-card);
   padding: 2rem;
@@ -342,6 +355,7 @@ section {
   word-wrap: break-word; 
 }
 
+/* ===== FOOTER ===== */
 footer {
   text-align: center;
   padding: 2rem 0;
@@ -360,15 +374,79 @@ footer {
   color: var(--primary-color);
 }
 
+/* Créditos del footer */
 footer h3 {
     font-size: 0.9rem;
     color: var(--text-light);
     font-weight: 500;
 }
 
+/* ===== ESTILOS PARA LA PÁGINA 404 ===== */
+.body-404 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: var(--bg-color); 
+}
+
+.container-404 {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.card-404 {
+    background: var(--bg-card);
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.card-404:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.card-404 h1 {
+    font-size: 6rem; /* 96px */
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 0; /* Resetea el padding del h1 principal */
+}
+
+.card-404 h2 {
+    font-size: 1.75rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0; /* Quita la línea de color de los h2 normales */
+}
+
+.card-404 h2::after {
+    display: none; /* Oculta la línea de color */
+}
+
+.card-404 p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+
+.card-404 .btn-primary {
+    width: 100%;
+    max-width: 250px; /* Evita que sea demasiado ancho */
+}
+
+/* ===== UTILIDADES ===== */
 .hidden {
   display: none !important;
 }
+
+/* ===== ESTILOS DE RESPUESTAS ADAPTADOS ===== */
 
 .opinion-actions {
   margin-top: 15px;
@@ -435,7 +513,7 @@ footer h3 {
 
 .btn-reply-submit {
   background-color: var(--primary-color);
-  color: white; /* <-- ARREGLADO (antes #2c0094) */
+  color: #ffffff;
 }
 
 .btn-reply-submit:hover {
@@ -469,6 +547,7 @@ footer h3 {
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
+/* ===== RESPONSIVIDAD ===== */
 @media (max-width: 768px) {
   h1 { font-size: 2rem; }
   h2 { font-size: 1.5rem; }
@@ -510,4 +589,4 @@ footer h3 {
   .login-input {
     margin-bottom: 10px;
   }
-}
+} 
