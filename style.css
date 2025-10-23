@@ -787,3 +787,63 @@ html:not([data-theme="dark"]) .body-404 {
     margin-bottom: 10px;
   }
 }
+/* ===== ESTILOS ADICIONALES PARA LOGIN ===== */
+
+/* Separador "hr" */
+.divider {
+    border: none;
+    border-top: 1px solid var(--border-color-light);
+    margin: 1.5rem 0;
+    width: 80%; /* Más corto que el ancho total */
+}
+
+/* Inputs específicos para teléfono */
+.login-input-phone {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 1rem; /* Espacio antes del botón */
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: var(--transition);
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+
+.login-input-phone:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2); /* Usa el color primario del tema */
+}
+
+/* Contenedor invisible para reCAPTCHA */
+/* Firebase lo usará para mostrar el widget (a veces invisible) */
+#recaptcha-container {
+    margin-top: 1rem;
+}
+
+/* Mensaje de error */
+.error-message {
+    color: var(--delete-color); /* Rojo de error */
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Ajustes para los botones en el paso 2 del teléfono */
+#phone-form-step2 .btn-primary,
+#phone-form-step2 .btn-secondary {
+    margin-top: 0.5rem; /* Menos espacio arriba */
+}
+
+/* En móvil, asegurar que los inputs y botones ocupen el ancho */
+@media (max-width: 480px) {
+    .login-input-phone {
+        margin-bottom: 10px;
+    }
+    #phone-form-step1 .btn-primary,
+    #phone-form-step2 .btn-primary,
+    #phone-form-step2 .btn-secondary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}

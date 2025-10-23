@@ -8,7 +8,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
     getAuth, GoogleAuthProvider, signInWithPopup,
-    signOut, onAuthStateChanged, updateProfile // updateProfile ya no se usa aquí
+    signOut, onAuthStateChanged, updateProfile, // updateProfile no se usa aquí pero podría ser útil si se edita desde index
+    // Importaciones para Teléfono
+    RecaptchaVerifier, signInWithPhoneNumber
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // === TU CONFIGURACIÓN DE FIREBASE ===
@@ -32,6 +34,8 @@ const provider = new GoogleAuthProvider();
 let currentUser = null;
 let currentTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto
 let unsubscribeOpinions = null;
+let recaptchaVerifier = null; // Para reCAPTCHA
+let phoneConfirmationResult = null; // Para guardar el resultado del envío de SMS
 
 // === ESPERAR A QUE EL DOM ESTÉ LISTO ===
 document.addEventListener('DOMContentLoaded', () => {
@@ -48,7 +52,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const opinionTextarea = document.getElementById('opinion-text');
     const submitOpinionBtn = document.getElementById('submit-opinion-btn');
     const opinionsList = document.getElementById('opinions-list');
-    // Ya no necesitamos los elementos del modal aquí
+    // Elementos del formulario de teléfono
+    const phoneFormStep1 = document.getElementById('phone-form-step1');
+    const phoneNumberInput = document.getElementById('phone-number-input');
+    const sendCodeBtn = document.getElementById('send-code-btn');
+    const recaptchaContainer = document.getElementById('recaptcha-container');
+    const phoneFormStep2 = document.getElementById('phone-form-step2');
+    const smsCodeInput = document.getElementById('sms-code-input');
+    const verifyCodeBtn = document.getElementById('verify-code-btn');
+    const cancelPhoneBtn = document.getElementById('cancel-phone-btn');
+    const phoneAuthError = document.getElementById('phone-auth-error');
+    // Link a perfil (ya no es un botón que abre modal)
+    const editProfileLink = document.getElementById('edit-profile-link');
+
 
     console.log("Resultado de getElementById('theme-toggle') al cargar DOM:", themeToggleBtn);
 
@@ -70,16 +86,95 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else { console.error("Botón 'theme-toggle' no encontrado."); }
 
+    // === Configurar reCAPTCHA ===
+     const setupRecaptcha = () => {
+        if (!recaptchaContainer) {
+             console.error("Contenedor reCAPTCHA no encontrado.");
+             // Deshabilitar botón de enviar SMS si no hay contenedor
+             if(sendCodeBtn) sendCodeBtn.disabled = true;
+             return;
+        }
+        try {
+            // Asegurarse de que no se cree múltiples veces
+            if (!recaptchaVerifier) {
+                recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                    'size': 'invisible',
+                    'callback': (response) => { console.log("reCAPTCHA verificado."); },
+                    'expired-callback': () => {
+                        console.error("reCAPTCHA expirado.");
+                        showPhoneError("La verificación reCAPTCHA ha expirado. Inténtalo de nuevo.");
+                        resetPhoneAuth();
+                    }
+                });
+                 recaptchaVerifier.render().then((widgetId) => {
+                     window.recaptchaWidgetId = widgetId;
+                     console.log("Widget reCAPTCHA renderizado:", widgetId);
+                 }).catch(error => { // Capturar error de renderizado
+                    console.error("Error al renderizar reCAPTCHA:", error);
+                    showPhoneError("No se pudo iniciar la verificación reCAPTCHA. Asegúrate de estar en un dominio autorizado (HTTPS o localhost).");
+                     if(sendCodeBtn) sendCodeBtn.disabled = true; // Deshabilitar si falla
+                 });
+            }
+        } catch (error) {
+             console.error("Error al inicializar RecaptchaVerifier:", error);
+             showPhoneError("Error al configurar reCAPTCHA.");
+             if(sendCodeBtn) sendCodeBtn.disabled = true; // Deshabilitar si falla
+        }
+    };
+    setupRecaptcha(); // Llama a configurar reCAPTCHA al cargar
+
+
+     // Función para mostrar errores de teléfono
+     const showPhoneError = (message) => {
+         if (phoneAuthError) {
+             phoneAuthError.textContent = message;
+             phoneAuthError.classList.remove('hidden');
+         }
+     };
+     // Función para ocultar errores de teléfono
+      const hidePhoneError = () => {
+         if (phoneAuthError) {
+             phoneAuthError.classList.add('hidden');
+         }
+     };
+    // Función para resetear la UI de autenticación por teléfono
+    const resetPhoneAuth = () => {
+        if (phoneFormStep1) phoneFormStep1.classList.remove('hidden');
+        if (phoneFormStep2) phoneFormStep2.classList.add('hidden');
+        if (phoneNumberInput) phoneNumberInput.value = '';
+        if (smsCodeInput) smsCodeInput.value = '';
+        if (sendCodeBtn) { // Reactivar botón de enviar código
+             sendCodeBtn.disabled = false;
+             sendCodeBtn.textContent = 'Enviar Código SMS';
+        }
+         if (verifyCodeBtn) { // Resetear botón de verificar
+             verifyCodeBtn.disabled = false;
+             verifyCodeBtn.textContent = 'Verificar Código';
+        }
+        hidePhoneError();
+        phoneConfirmationResult = null;
+        // Resetear reCAPTCHA si existe y está renderizado
+        try {
+            if (recaptchaVerifier && typeof grecaptcha !== 'undefined' && window.recaptchaWidgetId !== undefined) {
+                 grecaptcha.reset(window.recaptchaWidgetId);
+            }
+        } catch(error){
+            console.warn("No se pudo resetear reCAPTCHA:", error);
+        }
+    };
+
     // === Funciones de Login/Logout con Google Auth ===
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
-            updateLoginUI(true, user.displayName);
+             const displayName = user.displayName || user.phoneNumber || "Usuario Anónimo";
+            updateLoginUI(true, displayName);
             loadOpinions();
         } else {
             currentUser = null;
             updateLoginUI(false, null);
             loadOpinions(); // Carga opiniones incluso sin usuario
+            resetPhoneAuth(); // Asegura reseteo al cerrar sesión
         }
     });
 
@@ -109,6 +204,84 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // === Event Listeners para Teléfono ===
+     if (sendCodeBtn && phoneNumberInput && recaptchaContainer) {
+        sendCodeBtn.addEventListener('click', async () => {
+            hidePhoneError();
+            const phoneNumber = phoneNumberInput.value.trim();
+
+            if (!phoneNumber || !/^\+[1-9]\d{1,14}$/.test(phoneNumber)) {
+                showPhoneError("Ingresa un número válido con código de país (ej: +18091234567).");
+                return;
+            }
+             if (!recaptchaVerifier) {
+                 showPhoneError("Error: reCAPTCHA no está listo.");
+                 // Intentar re-inicializar
+                 setupRecaptcha();
+                 return;
+             }
+
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = 'Enviando...';
+
+            try {
+                // Usa el recaptchaVerifier aquí
+                phoneConfirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+                console.log("SMS enviado, esperando código.");
+                if (phoneFormStep1) phoneFormStep1.classList.add('hidden');
+                if (phoneFormStep2) phoneFormStep2.classList.remove('hidden');
+                if (smsCodeInput) smsCodeInput.focus();
+
+            } catch (error) {
+                console.error("Error al enviar SMS: ", error);
+                 if (error.code === 'auth/invalid-phone-number') { showPhoneError("El número de teléfono no es válido."); }
+                 else if (error.code === 'auth/too-many-requests') { showPhoneError("Demasiados intentos. Intenta más tarde."); }
+                 else if (error.message.includes('reCAPTCHA')) { showPhoneError("Falló la verificación reCAPTCHA. Recarga la página.");}
+                 else { showPhoneError("Error al enviar el código SMS."); }
+                resetPhoneAuth(); // Resetea si hay error
+            } finally {
+                // Reactiva botón solo si NO se pasó al paso 2
+                 if (phoneFormStep1 && !phoneFormStep1.classList.contains('hidden')) {
+                     sendCodeBtn.disabled = false;
+                     sendCodeBtn.textContent = 'Enviar Código SMS';
+                 }
+            }
+        });
+    } else { console.error("Faltan elementos para el login por teléfono (paso 1)."); }
+
+    if (verifyCodeBtn && smsCodeInput) {
+        verifyCodeBtn.addEventListener('click', async () => {
+            hidePhoneError();
+            const code = smsCodeInput.value.trim();
+            if (!code || code.length !== 6) { showPhoneError("Ingresa el código de 6 dígitos."); return; }
+            if (!phoneConfirmationResult) { showPhoneError("Error: No se encontró la confirmación."); return; }
+
+            verifyCodeBtn.disabled = true;
+            verifyCodeBtn.textContent = 'Verificando...';
+
+            try {
+                await phoneConfirmationResult.confirm(code);
+                console.log("Código verificado, usuario autenticado.");
+                // onAuthStateChanged se encargará del resto
+            } catch (error) {
+                console.error("Error al verificar código: ", error);
+                if (error.code === 'auth/invalid-verification-code' || error.code === 'auth/code-expired') {
+                     showPhoneError("Código incorrecto o expirado.");
+                 } else { showPhoneError("Error al verificar el código."); }
+                 if (smsCodeInput) smsCodeInput.value = ''; // Limpia campo para reintentar
+            } finally {
+                 verifyCodeBtn.disabled = false;
+                 verifyCodeBtn.textContent = 'Verificar Código';
+            }
+        });
+    } else { console.error("Faltan elementos para el login por teléfono (paso 2)."); }
+
+    if (cancelPhoneBtn) {
+        cancelPhoneBtn.addEventListener('click', () => {
+            resetPhoneAuth(); // Vuelve al paso 1
+        });
+    } else { console.error("Botón 'cancel-phone-btn' no encontrado."); }
+
 
     // === FUNCIONES DE FIREBASE (Opiniones y Respuestas) ===
     const loadOpinions = () => {
@@ -134,16 +307,15 @@ document.addEventListener('DOMContentLoaded', () => {
         opinionDiv.dataset.opinionId = opinion.id;
         const opinionDate = opinion.timestamp ? opinion.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
         let deleteButtonHTML = '';
-        if (currentUser && opinion.userId === currentUser.uid) {
+        // Comprobar si hay usuario Y si el userId coincide
+        if (currentUser && opinion.userId && opinion.userId === currentUser.uid) {
             deleteButtonHTML = `<button class="btn-delete" data-opinion-id="${opinion.id}">Eliminar</button>`;
         }
         opinionDiv.innerHTML = `
             <div class="opinion-header">
-                <span class="opinion-author">${opinion.username}</span>
-                <span class="opinion-date">${opinionDate}</span>
+                <span class="opinion-author">${opinion.username || 'Anónimo'}</span> <span class="opinion-date">${opinionDate}</span>
             </div>
-            <p class="opinion-content">${opinion.text.replace(/\n/g, '<br>')}</p>
-            <div class="opinion-actions">
+            <p class="opinion-content">${(opinion.text || '').replace(/\n/g, '<br>')}</p> <div class="opinion-actions">
                 <button class="btn-reply">Responder</button>
                 ${deleteButtonHTML}
             </div>
@@ -182,18 +354,18 @@ document.addEventListener('DOMContentLoaded', () => {
         replyDiv.dataset.replyId = reply.id;
         const replyDate = reply.timestamp ? reply.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
         let deleteReplyButtonHTML = '';
-        if (currentUser && reply.userId === currentUser.uid) {
+         // Comprobar si hay usuario Y si el userId coincide
+        if (currentUser && reply.userId && reply.userId === currentUser.uid) {
             deleteReplyButtonHTML = `<button class="btn-delete-reply" data-opinion-id="${opinionId}" data-reply-id="${reply.id}">Eliminar</button>`;
         }
         replyDiv.innerHTML = `
             <div class="opinion-header">
                 <div>
-                    <span class="opinion-author">${reply.username}</span>
-                    <span class="opinion-date">${replyDate}</span>
+                    <span class="opinion-author">${reply.username || 'Anónimo'}</span> <span class="opinion-date">${replyDate}</span>
                 </div>
                 ${deleteReplyButtonHTML}
             </div>
-            <p class="opinion-content">${reply.text.replace(/\n/g, '<br>')}</p>`;
+            <p class="opinion-content">${(reply.text || '').replace(/\n/g, '<br>')}</p>`; // Fallback
         if (repliesContainer) repliesContainer.appendChild(replyDiv);
     };
 
@@ -229,7 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const repliesRef = collection(db, "opinions", parentOpinionId, "replies");
             await addDoc(repliesRef, {
-                username: currentUser.displayName, userId: currentUser.uid, text: text, timestamp: Timestamp.now()
+                username: currentUser.displayName || currentUser.phoneNumber || "Anónimo", // Usa nombre o teléfono
+                userId: currentUser.uid,
+                text: text,
+                timestamp: Timestamp.now()
             });
         } catch (error) { console.error("Error al añadir respuesta: ", error); alert("Error al publicar la respuesta."); }
     };
@@ -240,7 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (opinionText && currentUser) {
                 try {
                     await addDoc(collection(db, "opinions"), {
-                        username: currentUser.displayName, userId: currentUser.uid, text: opinionText, timestamp: Timestamp.now()
+                        username: currentUser.displayName || currentUser.phoneNumber || "Anónimo", // Usa nombre o teléfono
+                        userId: currentUser.uid,
+                        text: opinionText,
+                        timestamp: Timestamp.now()
                     });
                     if (opinionTextarea) opinionTextarea.value = '';
                 } catch (error) { console.error("Error al añadir opinión: ", error); alert("Error al publicar la opinión."); }
