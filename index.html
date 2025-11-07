@@ -55,14 +55,30 @@
 
     <main>
        <div class="container">
+            
             <section class="reflection-video">
-                </section>
+                <div class="video-card">
+                    <h3>Video de Reflexión</h3>
+                    <div class="video-wrapper">
+                        <iframe 
+                            width="560" 
+                            height="315" 
+                            src="https://www.youtube.com/embed/TU_ID_DE_TU_VIDEO" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="reflection-prompt">
+                        <p>Después de ver el video, tómate un momento para pensar y comparte tu opinión más abajo.</p>
+                    </div>
+                </div>
+            </section>
             
             <section id="opinion-section" class="opinion-section hidden">
                 <h2>Deja tu opinión</h2>
-                
                 <textarea id="opinion-text" class="opinion-textarea" placeholder="Escribe tu reflexión aquí..."></textarea>
-                
                 <button id="submit-opinion-btn" class="btn-primary">Publicar Opinión</button>
             </section>
 
@@ -73,10 +89,10 @@
     </main>
 
     <footer>
-        </footer>
+    </footer>
 
     <div id="profile-modal" class="modal hidden">
-        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" type="module"></script>
