@@ -456,4 +456,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-}); // Fin del DOMContentLoaded
+});

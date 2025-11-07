@@ -56,17 +56,25 @@
     <main>
        <div class="container">
             <section class="reflection-video">
-                 </section>
+                </section>
+            
             <section id="opinion-section" class="opinion-section hidden">
-                 </section>
-        </div>
+                <h2>Deja tu opinión</h2>
+                <textarea id="opinion-text" placeholder="Escribe tu reflexión aquí..."></textarea>
+                <button id="submit-opinion-btn" class="btn-primary">Publicar Opinión</button>
+            </section>
+
+            <section id="opinions-list" class="opinions-list-container">
+                </section>
+
+       </div>
     </main>
 
     <footer>
         </footer>
 
     <div id="profile-modal" class="modal hidden">
-         </div>
+        </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" type="module"></script>
