@@ -178,14 +178,14 @@
 
             <div class="team">
                 <h2>Equipo Principal</h2>
-                <p><strong>xGuard</strong></p>
+                <p><strong>xGuard™</strong></p>
                 <p>(Idea, Gestión y Diseño)</p>
             </div>
 
             <div class="team">
                 <h2>Desarrolladores</h2>
                 <p><strong>WillfryDev</strong></p>
-                <p><strong>LuisDev</strong></p>
+                <p><strong>Luis</strong></p>
             </div>
 
             <a href="index.html" class="back-link">← Volver al Foro</a>
@@ -197,33 +197,12 @@
     </footer>
 
     <script>
-        // --- Bloqueo Básico ---
-        // Deshabilitar menú contextual (clic derecho)
+
         document.addEventListener('contextmenu', event => event.preventDefault());
 
         // Deshabilitar selección de texto y arrastre (puede afectar usabilidad)
         document.addEventListener('selectstart', event => event.preventDefault());
         document.addEventListener('dragstart', event => event.preventDefault());
-
-        // Deshabilitar ciertas teclas (Ctrl+C, Ctrl+U, etc.) - ¡CUIDADO, puede ser molesto!
-        /*
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey) {
-                // Bloquear Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+U, Ctrl+S
-                if (['c', 'x', 'v', 'u', 's'].includes(event.key.toLowerCase())) {
-                    event.preventDefault();
-                    // alert("Función deshabilitada"); // Opcional: avisar al usuario
-                }
-            }
-            // Bloquear F12
-            if (event.key === 'F12') {
-                event.preventDefault();
-                // alert("Función deshabilitada"); // Opcional
-            }
-        });
-        */
-
-       // --- Lógica del Tema (simplificada para esta página) ---
         let currentTheme = localStorage.getItem('theme') || 'dark'; // Oscuro por defecto
 
         const applyTheme = (theme) => {
